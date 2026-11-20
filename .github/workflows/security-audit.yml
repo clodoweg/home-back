@@ -1,0 +1,54 @@
+name: Security Audit
+
+# Only when the dependencies change, plus weekly for advisories published without any change.
+# `npm audit` reads package-lock.json alone: no `npm ci`, the job takes a few seconds.
+# The Dependency Review job was removed: without Dependency Graph + GitHub Advanced Security it
+# errored on every PR (it was non-blocking) and only cost Actions minutes. Bring it back once
+# those are enabled (repo Settings → Code security).
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
+  schedule:
+    # Weekly, Monday 9am UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: NPM Security Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+
+      - name: Save audit report
+        if: always()
+        run: npm audit --package-lock-only --json > audit-results.json || true
+
+      - name: Upload audit report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: npm-audit-results
+          path: audit-results.json
+          retention-days: 30
+
+      # Fails on any high or critical advisory in the production dependencies (npm's exit code, no
+      # fragile jq parsing). Dev tools (vite, vitest, eslint…) never reach the deployed code: their
+      # advisories stay visible in the saved report above but do not block, as they often have no
+      # fix yet (e.g. GHSA-fc5q-39xc-vjpf, picomatch via vite / vitest).
+      - name: Fail on high/critical vulnerabilities (production dependencies)
+        run: npm audit --package-lock-only --omit=dev --audit-level=high

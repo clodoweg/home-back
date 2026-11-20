@@ -1,0 +1,140 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`detectAlerts — next snapshot shape > freezes every event (messages, keys, photos) when all categories flip at once 1`] = `
+[
+  {
+    "category": "alarm",
+    "message": "🛡️ <b>Alarme déclenchée</b>",
+    "photoCameras": [
+      "camera.aarlo_salon",
+      "camera.aarlo_entree",
+    ],
+    "throttleKey": "alarm:state:armed_away:triggered",
+  },
+  {
+    "category": "alarm",
+    "message": "🚨 <b>Sirène déclenchée !</b>",
+    "photoCameras": [
+      "camera.aarlo_salon",
+      "camera.aarlo_entree",
+    ],
+    "throttleKey": "alarm:siren",
+  },
+  {
+    "category": "lights",
+    "message": "🌙 Lumières <b>Salon</b> éteintes",
+    "throttleKey": "lights:Salon:off",
+  },
+  {
+    "category": "lights",
+    "message": "💡 Lumières <b>Cuisine</b> allumées",
+    "throttleKey": "lights:Cuisine:on",
+  },
+  {
+    "category": "spa",
+    "message": "🛁 <b>Spa sous 37°C</b> (actuellement 30.0°C)",
+    "throttleKey": "spa:below37",
+  },
+  {
+    "category": "fountain",
+    "message": "💧 <b>Plus d'eau dans la fontaine !</b>",
+    "throttleKey": "fountain:empty",
+  },
+  {
+    "category": "feeder",
+    "message": "🐾 <b>Bac 1 de croquettes vide</b>",
+    "throttleKey": "feeder:bac1:empty",
+  },
+  {
+    "category": "feeder",
+    "message": "🐾 <b>Bac 2 de croquettes vide</b>",
+    "throttleKey": "feeder:bac2:empty",
+  },
+  {
+    "category": "humidity",
+    "message": "💧 Humidité <b>Salle</b> sous 30% (20%)",
+    "throttleKey": "humidity:Salle:belowMin",
+  },
+  {
+    "category": "humidity",
+    "message": "💧 Humidité <b>Cave</b> au-dessus de 70% (85%)",
+    "throttleKey": "humidity:Cave:aboveMax",
+  },
+  {
+    "category": "temperature",
+    "message": "🌡️ Température <b>Chambre</b> sous 15°C (10.0°C)",
+    "throttleKey": "temperature:Chambre:belowMin",
+  },
+  {
+    "category": "temperature",
+    "message": "🔥 Température <b>Bureau</b> au-dessus de 30°C (33.0°C)",
+    "throttleKey": "temperature:Bureau:aboveMax",
+  },
+  {
+    "category": "washingMachine",
+    "message": "🧺 <b>Lave-linge : Cycle terminé !</b>",
+    "throttleKey": "washing_machine:finished",
+  },
+  {
+    "category": "washingMachine",
+    "message": "⚠️ <b>Erreur lave-linge :</b> E21 &lt;pompe&gt;",
+    "throttleKey": "washing_machine:error:E21 <pompe>",
+  },
+  {
+    "category": "printer",
+    "message": "⚠️ <b>Impression 3D en erreur !</b> (<i>benchy.3mf</i>)",
+    "throttleKey": "printer:error",
+  },
+]
+`;
+
+exports[`detectAlerts — next snapshot shape > freezes the persisted snapshot for a full house state 1`] = `
+{
+  "alarm": {
+    "lastChanged": "2026-10-22T08:00:00Z",
+    "sirenOn": false,
+    "sosLastUpdated": undefined,
+    "state": "armed_away",
+  },
+  "feeder": {
+    "food1Low": false,
+    "food2Low": false,
+  },
+  "fountain": {
+    "waterLow": false,
+  },
+  "humidity": {
+    "Salle": {
+      "aboveMax": false,
+      "belowMin": false,
+    },
+  },
+  "lights": {
+    "Salon": true,
+  },
+  "motion": {
+    "sensors": {
+      "binary_sensor.aarlo_motion_salon": false,
+    },
+  },
+  "printer": {
+    "filename": "",
+    "status": "printing",
+  },
+  "spa": {
+    "belowThreshold": false,
+  },
+  "temperature": {
+    "Chambre": {
+      "aboveMax": false,
+      "belowMin": false,
+    },
+  },
+  "washingMachine": {
+    "error": null,
+    "isFinished": false,
+    "mode": "rinse",
+    "status": "",
+  },
+}
+`;

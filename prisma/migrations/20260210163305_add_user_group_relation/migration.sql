@@ -1,0 +1,2 @@
+-- AddForeignKey
+ALTER TABLE "User" ADD CONSTRAINT "User_group_fkey" FOREIGN KEY ("group") REFERENCES "UserGroup"("name") ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -1,0 +1,739 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`PetkitApiService.getFormattedPetkitData — characterization > builds records from current images only, without previews, without history access 1`] = `
+{
+  "devices": [
+    {
+      "dailyFeed": {
+        "addAmountTotal1": 0,
+        "addAmountTotal2": 0,
+        "eatAvg": 42,
+        "eatCount": 5,
+        "eatTimes": [],
+        "planAmountTotal1": 20,
+        "planAmountTotal2": 10,
+        "planRealAmountTotal1": 0,
+        "planRealAmountTotal2": 0,
+        "realAmountTotal1": 10,
+        "realAmountTotal2": 8,
+        "times": 0,
+      },
+      "deviceId": 1,
+      "deviceType": "D4sh",
+      "id": 1,
+      "name": "Croquettes",
+      "status": {
+        "batteryPower": 87,
+        "batteryStatus": 1,
+        "feedSchedule": [
+          {
+            "items": [
+              {
+                "amount1": 10,
+                "amount2": 0,
+                "bac": 0,
+                "time": 25200,
+              },
+              {
+                "amount1": 0,
+                "amount2": 8,
+                "bac": 1,
+                "time": 45000,
+              },
+              {
+                "amount1": 8,
+                "amount2": 4,
+                "bac": 6,
+                "time": 68400,
+              },
+            ],
+            "repeats": 127,
+            "suspended": false,
+          },
+        ],
+        "food1": 2,
+        "food2": 1,
+        "pim": 64,
+        "wifi": {
+          "rsq": -50,
+        },
+      },
+    },
+    {
+      "data": {
+        "status": {
+          "electricStatus": 2,
+          "water_level_status": 0,
+        },
+      },
+      "deviceId": 2,
+      "deviceType": "Ctw3",
+      "id": 2,
+      "name": "Fontaine",
+      "status": {
+        "battery": 76,
+        "electricStatus": 2,
+        "pim": 58,
+        "powerStatus": 1,
+        "runStatus": 1,
+        "waterLevel": 0,
+      },
+    },
+  ],
+  "fountains": [
+    {
+      "data": {
+        "activity": {
+          "afternoon": 0,
+          "morning": 0,
+          "night": 0,
+        },
+        "electricity": {
+          "batteryPercent": 76,
+          "powerStatus": 1,
+        },
+        "filterPercent": 58,
+        "lackWarning": false,
+        "mode": 1,
+      },
+      "day": "2026-10-22",
+      "deviceId": 2,
+      "workRecords": [],
+    },
+  ],
+  "lastSyncedAt": "2026-10-22T14:00:00.000Z",
+  "records": [
+    {
+      "content": "Passage animal",
+      "day": 20261022,
+      "deviceId": 1,
+      "deviceType": "D4sh",
+      "preview": undefined,
+      "time": 1792676400,
+      "type": 2,
+    },
+    {
+      "content": "Repas",
+      "day": 20261022,
+      "deviceId": 1,
+      "deviceType": "D4sh",
+      "preview": undefined,
+      "preview1": undefined,
+      "preview2": undefined,
+      "time": 1792667110,
+      "type": 3,
+    },
+    {
+      "amount1": 0,
+      "amount2": 8,
+      "content": "Distribution",
+      "day": 20261022,
+      "deviceId": 1,
+      "deviceType": "D4sh",
+      "time": 1792665000,
+      "type": 4,
+    },
+    {
+      "amount1": 10,
+      "amount2": 0,
+      "content": "Distribution",
+      "day": 20261022,
+      "deviceId": 1,
+      "deviceType": "D4sh",
+      "time": 1792645200,
+      "type": 4,
+    },
+  ],
+}
+`;
+
+exports[`PetkitApiService.getFormattedPetkitData — characterization > emits a single aggregate record from the counters when there is no schedule 1`] = `
+{
+  "devices": [
+    {
+      "dailyFeed": {
+        "addAmountTotal1": 0,
+        "addAmountTotal2": 0,
+        "eatAvg": 42,
+        "eatCount": 5,
+        "eatTimes": [],
+        "planAmountTotal1": 0,
+        "planAmountTotal2": 0,
+        "planRealAmountTotal1": 0,
+        "planRealAmountTotal2": 0,
+        "realAmountTotal1": 12,
+        "realAmountTotal2": 0,
+        "times": 0,
+      },
+      "deviceId": 1,
+      "deviceType": "D4sh",
+      "id": 1,
+      "name": "Croquettes",
+      "status": {
+        "batteryPower": 100,
+        "batteryStatus": 1,
+        "feedSchedule": [],
+        "food1": 2,
+        "food2": 1,
+        "pim": 64,
+        "wifi": {
+          "rsq": -50,
+        },
+      },
+    },
+  ],
+  "fountains": [],
+  "lastSyncedAt": "2026-10-22T14:00:00.000Z",
+  "records": [
+    {
+      "content": "Passage animal",
+      "day": 20261022,
+      "deviceId": 1,
+      "deviceType": "D4sh",
+      "preview": "/api/ha/image/image.croquettes_derniere_visite",
+      "time": 1792676400,
+      "type": 2,
+    },
+    {
+      "content": "Repas",
+      "day": 20261022,
+      "deviceId": 1,
+      "deviceType": "D4sh",
+      "preview": "/api/ha/image/image.croquettes_dernier_repas",
+      "preview1": undefined,
+      "preview2": undefined,
+      "time": 1792667110,
+      "type": 3,
+    },
+    {
+      "amount1": 12,
+      "amount2": 0,
+      "content": "Distribution (total jour)",
+      "day": 20261022,
+      "deviceId": 1,
+      "deviceType": "D4sh",
+      "time": 1792677600,
+      "type": 4,
+    },
+  ],
+}
+`;
+
+exports[`PetkitApiService.getFormattedPetkitData — characterization > falls back on the planned amounts without counters 1`] = `
+{
+  "devices": [
+    {
+      "dailyFeed": {
+        "addAmountTotal1": 0,
+        "addAmountTotal2": 0,
+        "eatAvg": 42,
+        "eatCount": 5,
+        "eatTimes": [],
+        "planAmountTotal1": 20,
+        "planAmountTotal2": 10,
+        "planRealAmountTotal1": 0,
+        "planRealAmountTotal2": 0,
+        "realAmountTotal1": 10,
+        "realAmountTotal2": 8,
+        "times": 0,
+      },
+      "deviceId": 1,
+      "deviceType": "D4sh",
+      "id": 1,
+      "name": "Croquettes",
+      "status": {
+        "batteryPower": 87,
+        "batteryStatus": 1,
+        "feedSchedule": [
+          {
+            "items": [
+              {
+                "amount1": 10,
+                "amount2": 0,
+                "bac": 0,
+                "time": 25200,
+              },
+              {
+                "amount1": 0,
+                "amount2": 8,
+                "bac": 1,
+                "time": 45000,
+              },
+              {
+                "amount1": 8,
+                "amount2": 4,
+                "bac": 6,
+                "time": 68400,
+              },
+            ],
+            "repeats": 127,
+            "suspended": false,
+          },
+        ],
+        "food1": 2,
+        "food2": 1,
+        "pim": 64,
+        "wifi": {
+          "rsq": -50,
+        },
+      },
+    },
+  ],
+  "fountains": [],
+  "lastSyncedAt": "2026-10-22T14:00:00.000Z",
+  "records": [
+    {
+      "content": "Passage animal",
+      "day": 20261022,
+      "deviceId": 1,
+      "deviceType": "D4sh",
+      "preview": "/api/ha/image/image.croquettes_derniere_visite",
+      "time": 1792676400,
+      "type": 2,
+    },
+    {
+      "content": "Repas",
+      "day": 20261022,
+      "deviceId": 1,
+      "deviceType": "D4sh",
+      "preview": "/api/ha/image/image.croquettes_dernier_repas",
+      "preview1": undefined,
+      "preview2": undefined,
+      "time": 1792667110,
+      "type": 3,
+    },
+    {
+      "amount1": 0,
+      "amount2": 8,
+      "content": "Distribution",
+      "day": 20261022,
+      "deviceId": 1,
+      "deviceType": "D4sh",
+      "time": 1792665000,
+      "type": 4,
+    },
+    {
+      "amount1": 10,
+      "amount2": 0,
+      "content": "Distribution",
+      "day": 20261022,
+      "deviceId": 1,
+      "deviceType": "D4sh",
+      "time": 1792645200,
+      "type": 4,
+    },
+  ],
+}
+`;
+
+exports[`PetkitApiService.getFormattedPetkitData — characterization > reports an ongoing drink and the legacy fontaine_* entities 1`] = `
+{
+  "devices": [
+    {
+      "data": {
+        "status": {
+          "electricStatus": 1,
+          "water_level_status": 0,
+        },
+      },
+      "deviceId": 2,
+      "deviceType": "Ctw3",
+      "id": 2,
+      "name": "Fontaine",
+      "status": {
+        "battery": 33,
+        "electricStatus": 2,
+        "pim": 12,
+        "powerStatus": 1,
+        "runStatus": 1,
+        "waterLevel": 1,
+      },
+    },
+  ],
+  "fountains": [
+    {
+      "data": {
+        "activity": {
+          "afternoon": 1,
+          "morning": 0,
+          "night": 0,
+        },
+        "electricity": {
+          "batteryPercent": 100,
+          "powerStatus": 0,
+        },
+        "filterPercent": 0,
+        "lackWarning": false,
+        "mode": 1,
+      },
+      "day": "2026-10-22",
+      "deviceId": 2,
+      "workRecords": [
+        {
+          "dayTime": 57480,
+          "stayTime": 120,
+          "time": 1792677480,
+        },
+      ],
+    },
+  ],
+  "lastSyncedAt": "2026-10-22T14:00:00.000Z",
+  "records": [],
+}
+`;
+
+exports[`PetkitApiService.getFormattedPetkitData — characterization > scales the scheduled meals to the "total distribué" counters when history yields nothing 1`] = `
+{
+  "devices": [
+    {
+      "dailyFeed": {
+        "addAmountTotal1": 0,
+        "addAmountTotal2": 0,
+        "eatAvg": 42,
+        "eatCount": 5,
+        "eatTimes": [],
+        "planAmountTotal1": 20,
+        "planAmountTotal2": 10,
+        "planRealAmountTotal1": 0,
+        "planRealAmountTotal2": 0,
+        "realAmountTotal1": 15,
+        "realAmountTotal2": 10,
+        "times": 0,
+      },
+      "deviceId": 1,
+      "deviceType": "D4sh",
+      "id": 1,
+      "name": "Croquettes",
+      "status": {
+        "batteryPower": 87,
+        "batteryStatus": 1,
+        "feedSchedule": [
+          {
+            "items": [
+              {
+                "amount1": 10,
+                "amount2": 0,
+                "bac": 0,
+                "time": 25200,
+              },
+              {
+                "amount1": 0,
+                "amount2": 8,
+                "bac": 1,
+                "time": 45000,
+              },
+              {
+                "amount1": 8,
+                "amount2": 4,
+                "bac": 6,
+                "time": 68400,
+              },
+            ],
+            "repeats": 127,
+            "suspended": false,
+          },
+        ],
+        "food1": 2,
+        "food2": 1,
+        "pim": 64,
+        "wifi": {
+          "rsq": -50,
+        },
+      },
+    },
+  ],
+  "fountains": [],
+  "lastSyncedAt": "2026-10-22T14:00:00.000Z",
+  "records": [
+    {
+      "content": "Passage animal",
+      "day": 20261022,
+      "deviceId": 1,
+      "deviceType": "D4sh",
+      "preview": "/api/ha/image/image.croquettes_derniere_visite",
+      "time": 1792676400,
+      "type": 2,
+    },
+    {
+      "content": "Repas",
+      "day": 20261022,
+      "deviceId": 1,
+      "deviceType": "D4sh",
+      "preview": "/api/ha/image/image.croquettes_dernier_repas",
+      "preview1": undefined,
+      "preview2": undefined,
+      "time": 1792667110,
+      "type": 3,
+    },
+    {
+      "amount1": 0,
+      "amount2": 10,
+      "content": "Distribution",
+      "day": 20261022,
+      "deviceId": 1,
+      "deviceType": "D4sh",
+      "time": 1792665000,
+      "type": 4,
+    },
+    {
+      "amount1": 15,
+      "amount2": 0,
+      "content": "Distribution",
+      "day": 20261022,
+      "deviceId": 1,
+      "deviceType": "D4sh",
+      "time": 1792645200,
+      "type": 4,
+    },
+  ],
+}
+`;
+
+exports[`PetkitApiService.getFormattedPetkitData — characterization > synthesizes feeder records and fountain activity from the full history (history access) 1`] = `
+{
+  "devices": [
+    {
+      "dailyFeed": {
+        "addAmountTotal1": 0,
+        "addAmountTotal2": 0,
+        "eatAvg": 42,
+        "eatCount": 5,
+        "eatTimes": [],
+        "planAmountTotal1": 20,
+        "planAmountTotal2": 10,
+        "planRealAmountTotal1": 0,
+        "planRealAmountTotal2": 0,
+        "realAmountTotal1": 16,
+        "realAmountTotal2": 8,
+        "times": 0,
+      },
+      "deviceId": 1,
+      "deviceType": "D4sh",
+      "id": 1,
+      "name": "Croquettes",
+      "status": {
+        "batteryPower": 87,
+        "batteryStatus": 1,
+        "feedSchedule": [
+          {
+            "items": [
+              {
+                "amount1": 10,
+                "amount2": 0,
+                "bac": 0,
+                "time": 25200,
+              },
+              {
+                "amount1": 0,
+                "amount2": 8,
+                "bac": 1,
+                "time": 45000,
+              },
+              {
+                "amount1": 8,
+                "amount2": 4,
+                "bac": 6,
+                "time": 68400,
+              },
+            ],
+            "repeats": 127,
+            "suspended": false,
+          },
+        ],
+        "food1": 2,
+        "food2": 1,
+        "pim": 64,
+        "wifi": {
+          "rsq": -50,
+        },
+      },
+    },
+    {
+      "data": {
+        "status": {
+          "electricStatus": 2,
+          "water_level_status": 0,
+        },
+      },
+      "deviceId": 2,
+      "deviceType": "Ctw3",
+      "id": 2,
+      "name": "Fontaine",
+      "status": {
+        "battery": 76,
+        "electricStatus": 2,
+        "pim": 58,
+        "powerStatus": 1,
+        "runStatus": 1,
+        "waterLevel": 0,
+      },
+    },
+  ],
+  "fountains": [
+    {
+      "data": {
+        "activity": {
+          "afternoon": 2,
+          "morning": 1,
+          "night": 0,
+        },
+        "electricity": {
+          "batteryPercent": 76,
+          "powerStatus": 1,
+        },
+        "filterPercent": 58,
+        "lackWarning": false,
+        "mode": 1,
+      },
+      "day": "2026-10-22",
+      "deviceId": 2,
+      "workRecords": [
+        {
+          "dayTime": 54000,
+          "stayTime": 30,
+          "time": 1792674000,
+        },
+        {
+          "dayTime": 46800,
+          "stayTime": 300,
+          "time": 1792666800,
+        },
+        {
+          "dayTime": 25200,
+          "stayTime": 90,
+          "time": 1792645200,
+        },
+      ],
+    },
+    {
+      "data": {
+        "activity": {
+          "afternoon": 0,
+          "morning": 0,
+          "night": 1,
+        },
+        "electricity": {
+          "batteryPercent": 100,
+          "powerStatus": 1,
+        },
+        "filterPercent": 0,
+        "lackWarning": false,
+        "mode": 1,
+      },
+      "day": "2026-10-21",
+      "deviceId": 2,
+      "workRecords": [
+        {
+          "dayTime": 79200,
+          "stayTime": 40,
+          "time": 1792612800,
+        },
+      ],
+    },
+  ],
+  "lastSyncedAt": "2026-10-22T14:00:00.000Z",
+  "records": [
+    {
+      "content": "Passage animal",
+      "day": 20261022,
+      "deviceId": 1,
+      "deviceType": "D4sh",
+      "preview": "/api/ha/image/image.croquettes_derniere_visite",
+      "time": 1792676400,
+      "type": 2,
+    },
+    {
+      "content": "Repas",
+      "day": 20261022,
+      "deviceId": 1,
+      "deviceType": "D4sh",
+      "preview": "/api/ha/media?media_content_id=media-source%3A%2F%2Flocal%2Fmedia%2F100000001%2F20261022%2Feat%2Fsnapshot%2F100000001_1792667110.jpg",
+      "preview1": "/api/ha/media?media_content_id=media-source%3A%2F%2Flocal%2Fmedia%2F100000001%2F20261022%2Fdish_before%2Fsnapshot%2F100000001_1792666800.jpg",
+      "preview2": undefined,
+      "time": 1792667110,
+      "type": 3,
+    },
+    {
+      "amount1": 0,
+      "amount2": 8,
+      "content": "Distribution programmée",
+      "day": 20261022,
+      "deviceId": 1,
+      "deviceType": "D4sh",
+      "preview": "/api/ha/media?media_content_id=media-source%3A%2F%2Flocal%2Fmedia%2F100000001%2F20261022%2Ffeed%2Fsnapshot%2F100000001_1792665005.jpg",
+      "preview1": undefined,
+      "preview2": undefined,
+      "sources": Set {
+        "history",
+        "counter",
+      },
+      "time": 1792665000,
+      "type": 4,
+    },
+    {
+      "amount1": 6,
+      "amount2": 0,
+      "content": "Distribution",
+      "day": 20261022,
+      "deviceId": 1,
+      "deviceType": "D4sh",
+      "isCounter": true,
+      "preview": undefined,
+      "preview1": undefined,
+      "preview2": undefined,
+      "resId": 1,
+      "sources": Set {
+        "counter",
+      },
+      "time": 1792656000,
+      "type": 4,
+    },
+    {
+      "content": "Mouvement détecté",
+      "day": 20261022,
+      "deviceId": 1,
+      "deviceType": "D4sh",
+      "preview": "/api/ha/media?media_content_id=media-source%3A%2F%2Flocal%2Fmedia%2F100000001%2F20261022%2Fsnapshot%2Fsnapshot%2F100000001_1792653300.jpg",
+      "time": 1792653300,
+      "type": 1,
+    },
+    {
+      "content": "Repas",
+      "day": 20261022,
+      "deviceId": 1,
+      "deviceType": "D4sh",
+      "preview": "/api/ha/media?media_content_id=media-source%3A%2F%2Flocal%2Fmedia%2F100000001%2F20261022%2Feat%2Fsnapshot%2F100000001_1792645500.jpg",
+      "preview1": "/api/ha/media?media_content_id=media-source%3A%2F%2Flocal%2Fmedia%2F100000001%2F20261022%2Fdish_before%2Fsnapshot%2F100000001_1792645140.jpg",
+      "preview2": "/api/ha/media?media_content_id=media-source%3A%2F%2Flocal%2Fmedia%2F100000001%2F20261022%2Fdish_after%2Fsnapshot%2F100000001_1792645680.jpg",
+      "time": 1792645500,
+      "type": 3,
+    },
+    {
+      "amount1": 10,
+      "amount2": 0,
+      "content": "Distribution programmée",
+      "day": 20261022,
+      "deviceId": 1,
+      "deviceType": "D4sh",
+      "preview": "/api/ha/media?media_content_id=media-source%3A%2F%2Flocal%2Fmedia%2F100000001%2F20261022%2Ffeed%2Fsnapshot%2F100000001_1792645220.jpg",
+      "preview1": "/api/ha/media?media_content_id=media-source%3A%2F%2Flocal%2Fmedia%2F100000001%2F20261022%2Fdish_before%2Fsnapshot%2F100000001_1792645140.jpg",
+      "preview2": "/api/ha/media?media_content_id=media-source%3A%2F%2Flocal%2Fmedia%2F100000001%2F20261022%2Fdish_after%2Fsnapshot%2F100000001_1792645680.jpg",
+      "sources": Set {
+        "history",
+        "counter",
+      },
+      "time": 1792645200,
+      "type": 4,
+    },
+    {
+      "content": "Passage animal",
+      "day": 20261021,
+      "deviceId": 1,
+      "deviceType": "D4sh",
+      "preview": "/api/ha/media?media_content_id=media-source%3A%2F%2Flocal%2Fmedia%2F100000001%2F20261021%2Fpet%2Fsnapshot%2F100000001_1792619400.jpg",
+      "time": 1792619400,
+      "type": 2,
+    },
+  ],
+}
+`;

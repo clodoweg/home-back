@@ -1,0 +1,103 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+// The connection URL lives in prisma.config.ts (CLI) and lib/prisma.ts (runtime adapter)
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                      Int       @id @default(autoincrement())
+  clerkId                 String    @unique
+  email                   String
+  group                   String    @default("user")
+  widgetPreferences       Json      @default("{}")
+  createdAt               DateTime  @default(now())
+  theme                   String    @default("dark")
+  telegramChatId          String?
+  notificationPreferences Json      @default("{}")
+  userGroup               UserGroup @relation(fields: [group], references: [name])
+  notifications           Notification[]
+  webPushSubscriptions    WebPushSubscription[]
+}
+
+/// An alert as the bell of the front lists it (admins only, kept 30 days).
+model Notification {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  category  String
+  title     String
+  body      String
+  createdAt DateTime  @default(now())
+  readAt    DateTime?
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+/// A browser that accepted Web Push notifications (one row per device).
+model WebPushSubscription {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model UserGroup {
+  name        String   @id
+  permissions String[] @default([])
+  users       User[]
+}
+
+model SystemSettings {
+  apiEnabled Boolean  @default(true)
+  id         Int      @id @default(1)
+  updatedAt  DateTime @default(now()) @updatedAt
+}
+
+model SystemState {
+  key   String @id
+  value String
+}
+
+model EnedisDailyConsumption {
+  date      DateTime @id @db.Date
+  value     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model EnedisDailyMaxPower {
+  date      DateTime @id @db.Date
+  value     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model EnedisLoadCurve {
+  date      DateTime @id
+  value     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+
+/// One usage counter of one Paris day (hours on, cycles, detections…), computed each night from
+/// the HA history before the recorder purges it. `metric` is `<kind>` or `<kind>:<entity_id>`.
+model DailyUsage {
+  date      DateTime @db.Date
+  metric    String
+  value     Float
+  updatedAt DateTime @updatedAt
+
+  @@id([date, metric])
+  @@index([metric, date])
+}
