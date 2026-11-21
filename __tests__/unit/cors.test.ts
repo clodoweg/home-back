@@ -33,19 +33,21 @@ describe('ALLOWED_ORIGINS in production', () => {
         vi.resetModules();
     });
 
-    it('keeps only the front and the local Vite dev server', async () => {
+    it('keeps only the front: no local dev server in production (audit L1)', async () => {
         vi.stubEnv('NODE_ENV', 'production');
         vi.resetModules();
-        const { ALLOWED_ORIGINS, AUTHORIZED_PARTIES } = await import('@/lib/cors');
+        const { ALLOWED_ORIGINS, AUTHORIZED_PARTIES, buildCorsHeaders: buildProductionCorsHeaders } = await import('@/lib/cors');
 
-        expect([...ALLOWED_ORIGINS]).toEqual(['https://home.psaltery.org', 'http://localhost:5173']);
-        expect(AUTHORIZED_PARTIES).toEqual(['https://home.psaltery.org', 'http://localhost:5173']);
+        expect([...ALLOWED_ORIGINS]).toEqual(['https://home.psaltery.org']);
+        expect(AUTHORIZED_PARTIES).toEqual(['https://home.psaltery.org']);
+        expect(buildProductionCorsHeaders('http://localhost:5173')).toEqual({});
     });
 
-    it('adds the 127.0.0.1 variant outside production', async () => {
+    it('adds the local Vite dev server outside production', async () => {
         vi.resetModules();
         const { ALLOWED_ORIGINS } = await import('@/lib/cors');
 
+        expect(ALLOWED_ORIGINS.has('http://localhost:5173')).toBe(true);
         expect(ALLOWED_ORIGINS.has('http://127.0.0.1:5173')).toBe(true);
     });
 });

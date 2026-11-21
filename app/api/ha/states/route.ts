@@ -2,10 +2,12 @@ import { withAuth } from '@/lib/api-middleware';
 import { ApiResponse } from '@/lib/api-response';
 import { getCachedStates } from '@/lib/ha-states-cache';
 import { canSeeCameraEntities } from '@/lib/permissions';
+import { sanitizeHAStates } from '@/lib/ha-state-filter';
 import { logger } from '@/lib/logger';
 
 /**
- * GET /api/ha/states — every HA state, camera entities hidden from groups not allowed to see them.
+ * GET /api/ha/states — every HA state without its sensitive attributes (GPS, camera access), camera
+ * entities hidden from groups not allowed to see them.
  *
  * @returns 200 with the states, 502 when HA fails.
  */
@@ -17,11 +19,11 @@ export const GET = withAuth(async (_request, { user }) => {
         return ApiResponse.error('Failed to fetch from Home Assistant', 502);
     }
 
-    const filteredData = canSeeCameraEntities(user)
+    const visibleStates = canSeeCameraEntities(user)
         ? data
         : data.filter(entity => !entity.entity_id.startsWith('camera.'));
 
-    const response = ApiResponse.success(filteredData);
+    const response = ApiResponse.success(sanitizeHAStates(visibleStates));
     // The body depends on the caller's group: no shared cache may ever store it
     response.headers.set('Cache-Control', 'private, no-store');
     return response;

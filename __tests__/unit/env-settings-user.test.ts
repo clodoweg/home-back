@@ -71,9 +71,10 @@ describe('settings — API kill switch', () => {
 });
 
 describe('user provisioning', () => {
-    /** ADMIN_EMAILS is read at import: load a fresh copy per scenario. */
-    async function loadUser(adminEmails: string) {
+    /** ADMIN_EMAILS and ALLOWED_EMAILS are read at import: load a fresh copy per scenario. */
+    async function loadUser(adminEmails: string, allowedEmails = '') {
         vi.stubEnv('ADMIN_EMAILS', adminEmails);
+        vi.stubEnv('ALLOWED_EMAILS', allowedEmails);
         vi.resetModules();
         return import('@/lib/user');
     }
@@ -140,5 +141,69 @@ describe('user provisioning', () => {
 
         expect(await getUser('clerk_1')).toEqual({ id: 1 });
         expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({ where: { clerkId: 'clerk_1' }, include: { userGroup: true } });
+    });
+
+    describe('allowlist (audit H1)', () => {
+        it('allows the emails of ALLOWED_EMAILS and ADMIN_EMAILS, case-insensitively', async () => {
+            const { canProvisionEmail } = await loadUser('parent@example.org', ' Kid@Example.org , grandma@example.org');
+
+            expect(canProvisionEmail('kid@example.org')).toBe(true);
+            expect(canProvisionEmail(' GRANDMA@example.org ')).toBe(true);
+            expect(canProvisionEmail('Parent@Example.org')).toBe(true);
+        });
+
+        it('refuses any other email, and the empty one', async () => {
+            const { canProvisionEmail } = await loadUser('parent@example.org', 'kid@example.org');
+
+            expect(canProvisionEmail('stranger@gmail.example')).toBe(false);
+            expect(canProvisionEmail('kid@example.org.evil.example')).toBe(false);
+            expect(canProvisionEmail('')).toBe(false);
+        });
+
+        it('refuses everyone when both lists are empty', async () => {
+            const { canProvisionEmail } = await loadUser('', '');
+
+            expect(canProvisionEmail('owner@example.org')).toBe(false);
+        });
+    });
+
+    describe('provisionUser', () => {
+        it('writes nothing for an email that is not allowed', async () => {
+            const { provisionUser } = await loadUser('parent@example.org', 'kid@example.org');
+
+            expect(await provisionUser('clerk_9', 'stranger@gmail.example')).toBeNull();
+            expect(mockPrisma.user.findFirst).not.toHaveBeenCalled();
+            expect(mockPrisma.user.upsert).not.toHaveBeenCalled();
+            expect(mockPrisma.user.update).not.toHaveBeenCalled();
+        });
+
+        it('creates an allowed account as user, an admin email as admin', async () => {
+            const { provisionUser } = await loadUser('parent@example.org', 'kid@example.org');
+            mockPrisma.user.findFirst.mockResolvedValue(null);
+
+            expect(await provisionUser('clerk_kid', 'kid@example.org')).toMatchObject({ clerkId: 'clerk_kid', group: 'user' });
+            expect(await provisionUser('clerk_parent', 'parent@example.org')).toMatchObject({ clerkId: 'clerk_parent', group: 'admin' });
+        });
+
+        it('re-attaches the row already holding this email, keeping its group and preferences', async () => {
+            const { provisionUser } = await loadUser('', 'kid@example.org');
+            const existing = { id: 3, clerkId: 'clerk_dev', email: 'Kid@Example.org', group: 'children' };
+            mockPrisma.user.findFirst.mockResolvedValue(existing as never);
+            mockPrisma.user.update.mockResolvedValue({ ...existing, clerkId: 'clerk_prod' } as never);
+
+            const user = await provisionUser('clerk_prod', ' kid@example.org');
+
+            expect(user).toMatchObject({ id: 3, clerkId: 'clerk_prod', group: 'children' });
+            expect(mockPrisma.user.findFirst).toHaveBeenCalledWith({
+                where: { email: { equals: 'kid@example.org', mode: 'insensitive' } },
+                orderBy: { id: 'asc' },
+            });
+            expect(mockPrisma.user.update).toHaveBeenCalledWith({
+                where: { id: 3 },
+                data: { clerkId: 'clerk_prod' },
+                include: { userGroup: true },
+            });
+            expect(mockPrisma.user.upsert).not.toHaveBeenCalled();
+        });
     });
 });

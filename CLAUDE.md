@@ -54,18 +54,33 @@ Cycle d'une requête :
 
 ## Pièges non évidents
 
-- Clerk n'est pas une liste blanche fermée : `withAuth` **crée automatiquement** l'utilisateur en
-  base au premier appel (groupe admin seulement si son email est dans `ADMIN_EMAILS`, sans valeur
-  par défaut ; cf. `lib/user.ts`). L'inscription Clerk doit donc rester fermée.
+- Création des comptes (`lib/user.ts`, `provisionUser`) : au premier appel d'un compte Clerk
+  inconnu, `withAuth` lit son email **vérifié** dans l'API Clerk (jamais les claims du jeton) et ne
+  crée l'utilisateur que si cet email est dans `ALLOWED_EMAILS` ou `ADMIN_EMAILS` (admin pour ce
+  dernier) ; sinon 403 `USER_NOT_FOUND`, sans rien écrire en base. Un utilisateur déjà en base avec
+  cet email est **rattaché** au nouvel id Clerk (groupe, préférences, Telegram conservés) : les ids
+  changent au passage de l'instance Clerk de développement à celle de production. L'inscription
+  Clerk doit rester fermée (invitation ou allowlist), cette liste n'en est que le second verrou.
 - IP cliente (`lib/client-ip.ts`) : `cf-connecting-ip` n'est cru que si l'en-tête `x-origin-secret`
-  injecté par Cloudflare vaut `CF_ORIGIN_SECRET` ; sinon l'IP posée par Vercel fait foi. Un appel
-  direct à `*.vercel.app` ne peut donc pas se faire passer pour le réseau de la maison.
+  injecté par Cloudflare vaut `CF_ORIGIN_SECRET` ; sinon l'IP posée par Vercel fait foi. Tout repose
+  sur ce secret : il ne doit **jamais** apparaître dans une réponse (règle Cloudflare de type
+  *Request Header*, pas *Response Header* ; il a fuité ainsi en novembre 2026), et une règle du
+  pare-feu Vercel refuse toute requête qui ne le porte pas (le domaine de prod reste joignable chez
+  Vercel sans passer par Cloudflare). Changer le secret = Vercel (variable et règle) + Cloudflare.
   Réseau maison (`isOnHomeNetwork`, `lib/permissions.ts`) : réseau local, plus l'IP publique du nom
   DDNS de `HOME_DDNS_HOSTNAME` (variable Vercel, jamais en dur : elle révèle l'IP de la maison).
 - Le dépôt est **public** : aucun identifiant personnel en dur (numéros de compteur, de contrat,
   de série, d'appareil, noms, adresses). Ils viennent de variables Vercel (`HOME_DDNS_HOSTNAME`,
   `SUEZ_COUNTER_ID`, `PETKIT_DEVICE_ID`) ; les tests utilisent des valeurs fictives
   (`__tests__/setup.ts`).
+- États et historique HA (`lib/ha-state-filter.ts`) : `GET /api/ha/states` et `/api/ha/history`
+  retirent, pour tous les groupes, la position GPS (`latitude`, `longitude`…) et les accès caméra
+  (`access_token`, `entity_picture`, `last_video`) ; `last_thumbnail` perd sa query string (la
+  signature), le front lit l'horodatage de son chemin. Un nouvel attribut sensible s'y ajoute.
+- Rate limit (`lib/ratelimit.ts`) : Upstash, partagé par les instances ; sans Upstash ou s'il
+  tombe, une fenêtre en mémoire par instance prend le relais (jamais illimité, jamais de 500).
+- CORS : en production, seule l'origine du front ; `localhost:5173` seulement hors production (le
+  front en local vise un back local, `VITE_API_URL=http://localhost:3000`).
 - Le JWT ne passe **jamais** en query string (`?token=` refusé) : le front charge les images avec
   `fetch` + `Authorization`.
 - Les droits sont portés par `UserGroup.permissions` : drapeaux (`remote`, `history`, `cameras`,

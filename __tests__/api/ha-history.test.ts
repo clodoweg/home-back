@@ -136,4 +136,18 @@ describe('GET /api/ha/history — security regressions (S06)', () => {
         expect(res.status).toBe(500);
         expect(JSON.stringify(await res.json())).not.toContain('ECONNREFUSED');
     });
+
+    it('removes the GPS trail from a device tracker history (audit M1)', async () => {
+        mockHAFetchResponse([[
+            { entity_id: 'device_tracker.phone', state: 'away', attributes: { friendly_name: 'Phone', latitude: 48.85, longitude: 2.35 } },
+        ]]);
+
+        const res = await GET(
+            new Request('http://localhost:3000/api/ha/history?entity_id=device_tracker.phone&start_time=2026-01-01T00:00:00.000Z&end_time=2026-01-02T00:00:00.000Z'),
+            { params: noSlug },
+        );
+
+        expect(res.status).toBe(200);
+        expect(await res.json()).toEqual([[{ entity_id: 'device_tracker.phone', state: 'away', attributes: { friendly_name: 'Phone' } }]]);
+    });
 });
