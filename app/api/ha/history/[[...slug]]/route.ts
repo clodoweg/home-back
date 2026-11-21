@@ -4,11 +4,13 @@ import { haFetch } from '@/lib/haClient';
 import { ApiResponse } from '@/lib/api-response';
 import { canAccessHistory } from '@/lib/permissions';
 import { buildHistoryPath } from '@/lib/ha-paths';
+import { sanitizeHAHistory } from '@/lib/ha-state-filter';
 import { logger } from '@/lib/logger';
 
 /**
- * GET /api/ha/history/[[...slug]] — 200 with the HA history, 400 on invalid parameters,
- * 403 without the history right, 502 when HA fails (whatever HA status).
+ * GET /api/ha/history/[[...slug]] — 200 with the HA history without its sensitive attributes (a
+ * device tracker's history is a GPS trail), 400 on invalid parameters, 403 without the history
+ * right, 502 when HA fails (whatever HA status).
  *
  * Supports two formats:
  * 1. Simplified format (no slug):
@@ -44,7 +46,7 @@ export const GET = withAuth<{ slug?: string[] }>(async (request, { params, user 
             return ApiResponse.error('Home Assistant API error', 502);
         }
 
-        return ApiResponse.success(data);
+        return ApiResponse.success(sanitizeHAHistory(data));
 
     } catch (error) {
         logger.error('Error in /api/ha/history', { error: String(error) });

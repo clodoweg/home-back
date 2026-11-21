@@ -7,6 +7,8 @@ import { headers } from 'next/headers';
 vi.mock('@clerk/nextjs/server', () => ({
     auth: vi.fn(),
     verifyToken: vi.fn(),
+    // The unknown account has no verified email: it is refused before provisioning
+    clerkClient: vi.fn().mockResolvedValue({ users: { getUser: vi.fn().mockResolvedValue({ primaryEmailAddress: null }) } }),
 }));
 
 vi.mock('next/headers', () => ({

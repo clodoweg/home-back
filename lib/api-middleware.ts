@@ -9,7 +9,7 @@ import { NextResponse } from 'next/server';
 import { auth, verifyToken, clerkClient } from '@clerk/nextjs/server';
 import { headers as nextHeaders } from 'next/headers';
 import { getCachedUser, invalidateUserCache } from '@/lib/user-cache';
-import { getOrCreateUser, type AuthUser } from '@/lib/user';
+import { provisionUser, type AuthUser } from '@/lib/user';
 import { logger } from '@/lib/logger';
 import { trackSecurityEvent } from '@/lib/security-alerts';
 import { isOnHomeNetwork } from '@/lib/permissions';
@@ -33,19 +33,19 @@ type AuthorizedHandler<P> = (
 ) => Promise<NextResponse>;
 
 /**
- * Primary email of a Clerk user, used when provisioning a user whose token has no email.
+ * Verified primary email of a Clerk user, read from the Clerk API when provisioning a new user.
+ * The token's email claims are not used for that: provisioning, admin promotion and re-attachment
+ * all trust this address, so it must be one Clerk has verified.
  *
  * @param userId - Clerk user id.
- * @returns The email, or a synthetic `user-<id>` when Clerk has none or cannot be reached.
+ * @returns The email, or null when the primary address is missing or not verified.
+ * @throws When the Clerk API cannot be reached.
  */
-async function fetchClerkEmail(userId: string): Promise<string> {
-    try {
-        const client = await clerkClient();
-        const clerkUser = await client.users.getUser(userId);
-        return clerkUser.primaryEmailAddress?.emailAddress || clerkUser.emailAddresses?.[0]?.emailAddress || `user-${userId}`;
-    } catch {
-        return `user-${userId}`;
-    }
+async function fetchVerifiedClerkEmail(userId: string): Promise<string | null> {
+    const client = await clerkClient();
+    const clerkUser = await client.users.getUser(userId);
+    const primary = clerkUser.primaryEmailAddress;
+    return primary?.verification?.status === 'verified' && primary.emailAddress ? primary.emailAddress : null;
 }
 
 /**
@@ -177,18 +177,38 @@ export function withAuth<P = Record<string, string | string[] | undefined>>(hand
                 '';
 
             if (!dbUser) {
-                // Clerk session tokens carry no email by default: the Clerk API is only called
-                // to provision a new user, never on every request
-                if (!email) email = await fetchClerkEmail(userId);
+                // The Clerk API is only called to provision a new user, never on every request.
+                // WARNING: nothing is written before the allowlist check (provisionUser): Clerk
+                // sign-up may be open to anyone with a Google account (audit H1, M2).
+                let verifiedEmail: string | null;
                 try {
-                    dbUser = await getOrCreateUser(userId, email);
-                    invalidateUserCache(userId);
-                    logger.info(`✅ Auto-provisioned user ${email} (${userId}) as ${dbUser.group}`, { requestId });
-                } catch (provisionError) {
-                    logger.error('Auto-provisioning failed', { requestId, userId, email, error: String(provisionError) });
-                    const response = applyCors(ApiResponse.error("Utilisateur non autorisé", 403, undefined, 'USER_NOT_FOUND'));
-                    return response;
+                    verifiedEmail = await fetchVerifiedClerkEmail(userId);
+                } catch (clerkError) {
+                    logger.error('Clerk user lookup failed during provisioning', { requestId, userId, error: String(clerkError) });
+                    return applyCors(ApiResponse.error('Service temporarily unavailable', 503, undefined, 'SERVICE_UNAVAILABLE'));
                 }
+
+                try {
+                    dbUser = verifiedEmail ? await provisionUser(userId, verifiedEmail) : null;
+                } catch (provisionError) {
+                    logger.error('Auto-provisioning failed', { requestId, userId, error: String(provisionError) });
+                    return applyCors(ApiResponse.error("Utilisateur non autorisé", 403, undefined, 'USER_NOT_FOUND'));
+                }
+
+                if (!dbUser) {
+                    await trackSecurityEvent({
+                        type: 'permission_denied',
+                        ip,
+                        requestId,
+                        details: verifiedEmail ? `Account not allowed: ${verifiedEmail}` : 'Account without a verified email',
+                    });
+                    logger.security('Refused provisioning: email not allowed or not verified', { requestId, ip, userId, email: verifiedEmail });
+                    return applyCors(ApiResponse.error("Utilisateur non autorisé", 403, undefined, 'USER_NOT_FOUND'));
+                }
+
+                invalidateUserCache(userId);
+                email = email || dbUser.email;
+                logger.info(`✅ Provisioned user ${dbUser.email} (${userId}) as ${dbUser.group}`, { requestId });
             }
 
             const permissions = dbUser.userGroup?.permissions || [];

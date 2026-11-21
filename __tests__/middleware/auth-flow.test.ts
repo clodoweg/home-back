@@ -1,12 +1,22 @@
 /**
  * Tests for the withAuth middleware (auth flow, CORS, rate limiting, network)
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, afterAll } from 'vitest';
 import { setMockUser, clearMockUsers, mockPrisma } from '../setup';
 import { withAuth } from '@/lib/api-middleware';
 import { auth, verifyToken, clerkClient } from '@clerk/nextjs/server';
 import { checkRateLimit } from '@/lib/ratelimit';
+import { trackSecurityEvent } from '@/lib/security-alerts';
 import { ADMIN_USER, LOCAL_ONLY_USER } from '../helpers/test-users';
+
+// lib/user reads the allowlist at import, before this file's imports run
+vi.hoisted(() => {
+    process.env.ALLOWED_EMAILS = 'family@test.home';
+});
+
+afterAll(() => {
+    delete process.env.ALLOWED_EMAILS;
+});
 
 // Same Clerk mock as setup.ts, plus clerkClient for the email lookup
 vi.mock('@clerk/nextjs/server', () => ({
@@ -14,6 +24,19 @@ vi.mock('@clerk/nextjs/server', () => ({
     verifyToken: vi.fn().mockRejectedValue(new Error('mock: no token')),
     clerkClient: vi.fn(),
 }));
+
+/** Clerk client whose user has this primary email (null: none). */
+function clerkWithPrimaryEmail(email: string | null, status = 'verified') {
+    const getUser = vi.fn().mockResolvedValue({
+        primaryEmailAddress: email ? { emailAddress: email, verification: { status } } : null,
+    });
+    return { users: { getUser } } as never;
+}
+
+// By default an unknown Clerk account has no verified email: it is refused before any write
+beforeEach(() => {
+    vi.mocked(clerkClient).mockResolvedValue(clerkWithPrimaryEmail(null));
+});
 
 const mockAuth = vi.mocked(auth);
 const mockCheckRateLimit = vi.mocked(checkRateLimit);
@@ -47,19 +70,19 @@ describe('withAuth — Authentication', () => {
         expect(res.status).toBe(401);
     });
 
-    it('returns 403 when user not in DB', async () => {
+    it('returns 403 for an unknown account, without writing it in the database', async () => {
         mockAuth.mockResolvedValue({
             userId: 'clerk_unknown',
             sessionClaims: { email: 'unknown@test.com' },
         } as any);
-        // Provisioning of an unknown user fails (DB error)
-        mockPrisma.user.upsert.mockRejectedValueOnce(new Error('db down'));
         // No user set in mock cache → getCachedUser returns null
 
         const handler = withAuth(testHandler);
         const res = await handler(createRequest(), { params });
 
         expect(res.status).toBe(403);
+        expect(mockPrisma.user.upsert).not.toHaveBeenCalled();
+        expect(mockPrisma.user.update).not.toHaveBeenCalled();
     });
 
     it('returns 200 for authenticated admin', async () => {
@@ -134,12 +157,11 @@ describe('withAuth — CORS', () => {
     });
 
     it('applies CORS headers to 403 Forbidden responses', async () => {
+        // Unknown account: refused before provisioning
         mockAuth.mockResolvedValue({
             userId: 'clerk_unknown',
             sessionClaims: { email: 'unknown@test.com' },
         } as any);
-        // Provisioning of an unknown user fails (DB error)
-        mockPrisma.user.upsert.mockRejectedValueOnce(new Error('db down'));
 
         const { headers } = await import('next/headers');
         vi.mocked(headers).mockResolvedValue({
@@ -313,9 +335,8 @@ describe('withAuth — error contract and token transport', () => {
     });
 
     it('puts USER_NOT_FOUND in the code field the front reads (F12)', async () => {
-        // Unknown Clerk ID with no DB row: auto-provisioning fails on the mocked Prisma
+        // Unknown Clerk ID with no DB row and no allowed email: refused before provisioning
         mockAuth.mockResolvedValue({ userId: 'clerk_unknown', sessionClaims: { email: 'unknown@test.com' } } as any);
-        mockPrisma.user.upsert.mockRejectedValueOnce(new Error('db down'));
 
         const res = await withAuth(testHandler)(createRequest(), { params });
 
@@ -408,51 +429,97 @@ describe('withAuth — Clerk fallbacks and handler errors', () => {
         });
 
         afterEach(() => {
-            // Other tests rely on provisioning failing for unknown users
+            // Other tests rely on unknown users never being provisioned
             mockPrisma.userGroup.findUnique.mockReset();
             mockPrisma.user.upsert.mockReset();
+            mockPrisma.user.findFirst.mockReset();
+            mockPrisma.user.update.mockReset();
         });
 
         const provisionedEmail = () => (mockPrisma.user.upsert.mock.calls[0][0] as { create: { email: string } }).create.email;
 
-        it('asks Clerk for the email when the token has none', async () => {
-            mockAuth.mockResolvedValue({ userId: NEW_ID, sessionClaims: {} } as any);
-            const getUser = vi.fn().mockResolvedValue({ primaryEmailAddress: { emailAddress: 'from-clerk@test.home' } });
-            vi.mocked(clerkClient).mockResolvedValue({ users: { getUser } } as any);
+        const expectNothingWritten = () => {
+            expect(mockPrisma.user.upsert).not.toHaveBeenCalled();
+            expect(mockPrisma.user.update).not.toHaveBeenCalled();
+            expect(mockPrisma.userGroup.create).not.toHaveBeenCalled();
+        };
+
+        it('provisions an allowed account with its verified Clerk email, not the token claims', async () => {
+            mockAuth.mockResolvedValue({ userId: NEW_ID, sessionClaims: { email: 'claims@test.home' } } as any);
+            vi.mocked(clerkClient).mockResolvedValue(clerkWithPrimaryEmail('family@test.home'));
 
             const res = await withAuth(testHandler)(createRequest(), { params });
 
             expect(res.status).toBe(200);
-            expect(getUser).toHaveBeenCalledWith(NEW_ID);
-            expect(provisionedEmail()).toBe('from-clerk@test.home');
+            expect(provisionedEmail()).toBe('family@test.home');
         });
 
-        it('prefers the claims email, then the first Clerk address', async () => {
-            mockAuth.mockResolvedValue({ userId: NEW_ID, sessionClaims: { primary_email: 'claims@test.home' } } as any);
-            await withAuth(testHandler)(createRequest(), { params });
-            expect(clerkClient).not.toHaveBeenCalled();
-            expect(provisionedEmail()).toBe('claims@test.home');
-
-            mockPrisma.user.upsert.mockClear();
+        it('refuses an account whose email is not allowed, without writing anything (audit H1)', async () => {
             mockAuth.mockResolvedValue({ userId: NEW_ID, sessionClaims: {} } as any);
-            const getUser = vi.fn().mockResolvedValue({ emailAddresses: [{ emailAddress: 'second@test.home' }] });
-            vi.mocked(clerkClient).mockResolvedValue({ users: { getUser } } as any);
-            await withAuth(testHandler)(createRequest(), { params });
-            expect(provisionedEmail()).toBe('second@test.home');
+            vi.mocked(clerkClient).mockResolvedValue(clerkWithPrimaryEmail('stranger@gmail.example'));
 
-            mockPrisma.user.upsert.mockClear();
-            getUser.mockResolvedValue({ emailAddresses: [] });
-            await withAuth(testHandler)(createRequest(), { params });
-            expect(provisionedEmail()).toBe(`user-${NEW_ID}`);
+            const res = await withAuth(testHandler)(createRequest(), { params });
+
+            expect(res.status).toBe(403);
+            expect((await res.json()).code).toBe('USER_NOT_FOUND');
+            expect(mockPrisma.user.findFirst).not.toHaveBeenCalled();
+            expectNothingWritten();
+            expect(trackSecurityEvent).toHaveBeenCalledWith(expect.objectContaining({
+                type: 'permission_denied',
+                details: 'Account not allowed: stranger@gmail.example',
+            }));
+            expect(testHandler).not.toHaveBeenCalled();
         });
 
-        it('falls back on a synthetic email when Clerk cannot be reached', async () => {
+        it('refuses an allowed email that Clerk has not verified', async () => {
+            mockAuth.mockResolvedValue({ userId: NEW_ID, sessionClaims: { email: 'family@test.home' } } as any);
+            vi.mocked(clerkClient).mockResolvedValue(clerkWithPrimaryEmail('family@test.home', 'unverified'));
+
+            const res = await withAuth(testHandler)(createRequest(), { params });
+
+            expect(res.status).toBe(403);
+            expectNothingWritten();
+            expect(trackSecurityEvent).toHaveBeenCalledWith(expect.objectContaining({ details: 'Account without a verified email' }));
+        });
+
+        it('answers 503 when Clerk cannot be reached, without writing anything', async () => {
             mockAuth.mockResolvedValue({ userId: NEW_ID, sessionClaims: {} } as any);
             vi.mocked(clerkClient).mockRejectedValue(new Error('down'));
 
-            await withAuth(testHandler)(createRequest(), { params });
+            const res = await withAuth(testHandler)(createRequest(), { params });
 
-            expect(provisionedEmail()).toBe(`user-${NEW_ID}`);
+            expect(res.status).toBe(503);
+            expect((await res.json()).code).toBe('SERVICE_UNAVAILABLE');
+            expectNothingWritten();
+        });
+
+        it('re-attaches the user already holding this email to the new Clerk id', async () => {
+            const existing = { id: 7, clerkId: 'clerk_dev_instance', email: 'Family@test.home', group: 'children', userGroup: { name: 'children', permissions: ['remote'] } };
+            mockAuth.mockResolvedValue({ userId: NEW_ID, sessionClaims: {} } as any);
+            vi.mocked(clerkClient).mockResolvedValue(clerkWithPrimaryEmail('family@test.home'));
+            mockPrisma.user.findFirst.mockResolvedValue(existing as never);
+            mockPrisma.user.update.mockResolvedValue({ ...existing, clerkId: NEW_ID } as never);
+
+            const res = await withAuth(testHandler)(createRequest(), { params });
+
+            expect(res.status).toBe(200);
+            expect(mockPrisma.user.update).toHaveBeenCalledWith(expect.objectContaining({ where: { id: 7 }, data: { clerkId: NEW_ID } }));
+            expect(mockPrisma.user.upsert).not.toHaveBeenCalled();
+            expect(testHandler).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+                user: expect.objectContaining({ group: 'children' }),
+                userEmail: 'Family@test.home',
+            }));
+        });
+
+        it('returns USER_NOT_FOUND when the database write fails', async () => {
+            mockAuth.mockResolvedValue({ userId: NEW_ID, sessionClaims: {} } as any);
+            vi.mocked(clerkClient).mockResolvedValue(clerkWithPrimaryEmail('family@test.home'));
+            mockPrisma.user.upsert.mockRejectedValue(new Error('db down'));
+
+            const res = await withAuth(testHandler)(createRequest(), { params });
+
+            expect(res.status).toBe(403);
+            expect((await res.json()).code).toBe('USER_NOT_FOUND');
         });
     });
 

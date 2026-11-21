@@ -39,6 +39,8 @@ export function clearMockUsers() {
 vi.mock('@clerk/nextjs/server', () => ({
     auth: vi.fn().mockResolvedValue({ userId: null, sessionClaims: null }),
     verifyToken: vi.fn().mockRejectedValue(new Error('mock: no token')),
+    // An unknown Clerk account has no verified email by default: it is never provisioned
+    clerkClient: vi.fn().mockResolvedValue({ users: { getUser: vi.fn().mockResolvedValue({ primaryEmailAddress: null }) } }),
 }));
 
 // ── Mock next/headers ─────────────────────────────────────────────────────────

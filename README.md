@@ -33,8 +33,12 @@ DIRECT_URL=postgresql://...        # URL non poolée (CLI Prisma : migrations) ;
 Les autres variables activent les fonctions correspondantes :
 
 - `ADMIN_EMAILS` : emails promus admin à leur première connexion (aucun par défaut) ;
-- `CF_ORIGIN_SECRET` : secret injecté par Cloudflare ; sans lui en production, la restriction
-  « réseau maison » refuse les groupes sans droit `remote` ;
+- `ALLOWED_EMAILS` : autres emails autorisés à se connecter (groupe `user` à la création). Un
+  compte Clerk dont l'email vérifié n'est ni ici ni dans `ADMIN_EMAILS` est refusé
+  (`USER_NOT_FOUND`) sans rien écrire en base ; les utilisateurs déjà en base ne sont pas concernés ;
+- `CF_ORIGIN_SECRET` : secret injecté par Cloudflare dans les requêtes vers l'origine ; sans lui en
+  production, la restriction « réseau maison » refuse les groupes sans droit `remote`. Il ne doit
+  jamais apparaître dans une réponse ;
 - `HOME_DDNS_HOSTNAME` : nom DDNS de la maison (QuickConnect, DuckDNS…), dont l'IP publique compte
   comme « réseau maison » ; sans lui, seules les adresses du réseau local comptent ;
 - `SUEZ_COUNTER_ID` : numéro du compteur Suez, qui nomme ses capteurs HA
