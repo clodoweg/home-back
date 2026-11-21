@@ -64,7 +64,7 @@ Cycle d'une requête :
 - IP cliente (`lib/client-ip.ts`) : `cf-connecting-ip` n'est cru que si l'en-tête `x-origin-secret`
   injecté par Cloudflare vaut `CF_ORIGIN_SECRET` ; sinon l'IP posée par Vercel fait foi. Tout repose
   sur ce secret : il ne doit **jamais** apparaître dans une réponse (règle Cloudflare de type
-  *Request Header*, pas *Response Header* ; il a fuité ainsi en novembre 2026), et une règle du
+  *Request Header*, pas *Response Header*), et une règle du
   pare-feu Vercel refuse toute requête qui ne le porte pas (le domaine de prod reste joignable chez
   Vercel sans passer par Cloudflare). Changer le secret = Vercel (variable et règle) + Cloudflare.
   Réseau maison (`isOnHomeNetwork`, `lib/permissions.ts`) : réseau local, plus l'IP publique du nom
