@@ -15,7 +15,8 @@ class FakeSocket {
         FakeSocket.last = this;
     }
     addEventListener(type: string, listener: Listener) {
-        (this.listeners[type] ??= []).push(listener);
+        this.listeners[type] ??= [];
+        this.listeners[type].push(listener);
     }
     send(data: string) {
         this.sent.push(JSON.parse(data));

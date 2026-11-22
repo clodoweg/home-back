@@ -49,7 +49,7 @@ describe('logger', () => {
         // Routine traces are debug (P12); completion is info, problems are warn
         expect(eventsOf(debug)).toEqual(['api.request.start', 'ha.api.call']);
         expect(eventsOf(info)).toEqual(['api.request.complete']);
-        expect(eventsOf(warn).sort()).toEqual(['api.request.complete', 'rate_limit', 'security']);
+        expect(eventsOf(warn).sort((a, b) => a.localeCompare(b))).toEqual(['api.request.complete', 'rate_limit', 'security']);
     });
 
     it('uses a human-readable line in development', async () => {

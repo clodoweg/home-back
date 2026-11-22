@@ -53,6 +53,10 @@ describe('notifications', () => {
                 'a < b > c "d" \'e\' f\ng',
             );
         });
+
+        it('leaves no tag behind when tags are nested to rebuild one', () => {
+            expect(htmlToText('<scr<b>ipt>alert(1)</scr</b>ipt>')).toBe('alert(1)');
+        });
     });
 
     it('exposes the public VAPID key, or null when push is off', () => {

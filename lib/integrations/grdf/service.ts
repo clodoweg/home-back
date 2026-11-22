@@ -56,7 +56,7 @@ export const mapGrdfAttributes = (attributes: GazparAttributes, startDate: Date,
         if (!entry.time_period || !entry.energy_kwh) continue;
 
         // Try to match single date "DD/MM/YYYY" (Daily value)
-        const singleMatch = entry.time_period.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+        const singleMatch = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(entry.time_period);
         if (singleMatch) {
             const dayDate = parseFrenchDate(entry.time_period);
 
@@ -77,7 +77,7 @@ export const mapGrdfAttributes = (attributes: GazparAttributes, startDate: Date,
         }
 
         // Try to match range "Du DD/MM/YYYY au DD/MM/YYYY" (Weekly aggregated)
-        const rangeMatch = entry.time_period.match(/Du (\d{2}\/\d{2}\/\d{4}) au (\d{2}\/\d{2}\/\d{4})/);
+        const rangeMatch = /Du (\d{2}\/\d{2}\/\d{4}) au (\d{2}\/\d{2}\/\d{4})/.exec(entry.time_period);
         if (rangeMatch) {
             const periodStart = parseFrenchDate(rangeMatch[1]);
             const periodEnd = parseFrenchDate(rangeMatch[2]);
@@ -105,7 +105,6 @@ export const mapGrdfAttributes = (attributes: GazparAttributes, startDate: Date,
                     }
                 }
             }
-            continue;
         }
     }
 

@@ -11,7 +11,9 @@ const clean = (v: string | undefined): string =>
 /** Live-bound environment values for Home Assistant. */
 export const env = Object.freeze({
     get HA_BASE_URL(): string {
-        return clean(process.env.HA_BASE_URL).replace(/\/+$/, '');
+        let baseUrl = clean(process.env.HA_BASE_URL);
+        while (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
+        return baseUrl;
     },
     get HA_ACCESS_TOKEN(): string {
         return clean(process.env.HA_ACCESS_TOKEN);

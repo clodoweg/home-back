@@ -30,7 +30,7 @@ function cacheTemplate(hash: string, data: string): void {
 }
 
 function getTemplateHash(template: string): string {
-    return crypto.createHash('md5').update(template).digest('hex');
+    return crypto.createHash('sha256').update(template).digest('hex');
 }
 
 

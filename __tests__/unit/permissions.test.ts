@@ -55,6 +55,7 @@ describe('isOnHomeNetwork', () => {
     });
 
     it('undefined IP → false', async () => {
+        // eslint-disable-next-line sonarjs/no-undefined-argument -- the missing IP is the case under test
         expect(await isOnHomeNetwork(undefined)).toBe(false);
     });
 

@@ -39,15 +39,27 @@ const ENTITIES: Record<string, string> = {
 };
 
 /**
+ * Drops every tag, repeating until nothing changes: a tag split by another (`<scr<b>ipt>`) would
+ * come back whole after a single pass. `[^<>]` keeps each pass linear (no backtracking).
+ */
+function stripTags(text: string): string {
+    let previous: string;
+    let current = text;
+    do {
+        previous = current;
+        current = current.replace(/<[^<>]*>/g, '');
+    } while (current !== previous);
+    return current;
+}
+
+/**
  * Plain text of an alert message: line breaks kept, tags dropped, entities decoded.
  *
  * @param html - Alert message, with its light HTML markup.
  * @returns The text, trimmed, without blank lines.
  */
 export function htmlToText(html: string): string {
-    return html
-        .replace(/<br\s*\/?>/gi, '\n')
-        .replace(/<[^>]*>/g, '')
+    return stripTags(html.replace(/<br\s*\/?>/gi, '\n'))
         .replace(/&(?:amp|lt|gt|quot|#39|nbsp);/g, (entity) => ENTITIES[entity])
         .split('\n')
         .map((line) => line.replace(/\s+/g, ' ').trim())
