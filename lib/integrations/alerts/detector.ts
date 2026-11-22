@@ -6,7 +6,7 @@
  * Entity IDs are centralized here so they can be swapped via env vars if needed.
  */
 import type { AlertCategory, AlertEvent, AlertSnapshot } from './types';
-import { escapeHtml } from '@/lib/integrations/telegram';
+import { escapeHtml } from './format';
 import type { HAState } from '@/lib/haClient';
 
 const ALARM_ENTITY = 'alarm_control_panel.somfy_home_alarm_maison';
@@ -66,7 +66,7 @@ export interface DetectResult {
 interface DetectContext {
     states: HAState[];
     byId: Map<string, HAState>;
-    /** Arlo cameras photographed on alarm and motion events. */
+    /** Arlo cameras: motion alerts only exist when the house has some. */
     arloCameras: string[];
 }
 
@@ -84,11 +84,6 @@ function detectAlarm(ctx: DetectContext, previous: AlertSnapshot['alarm']): Cate
     const sirenOn = ctx.byId.get(ALARM_SIREN_ENTITY)?.state === 'on';
     const sosLastUpdated = ctx.byId.get(ALARM_SOS_ENTITY)?.last_updated;
 
-    const photosFor = (target: string) => {
-        const needsPhotos = target === 'triggered' || target === 'disarmed' || ARMED_STATES.has(target);
-        return needsPhotos && ctx.arloCameras.length > 0 ? { photoCameras: ctx.arloCameras } : {};
-    };
-
     const stateChanged = previous?.state && alarmState && alarmState !== previous.state;
     // Catch missed transitions: same final state but last_changed moved (e.g. disarmed→armed→disarmed→armed between two runs)
     const timestampMoved =
@@ -99,14 +94,12 @@ function detectAlarm(ctx: DetectContext, previous: AlertSnapshot['alarm']): Cate
             category: 'alarm',
             throttleKey: `alarm:state:${previous?.state}:${alarmState}`,
             message: `🛡️ <b>Alarme ${alarmStateLabel(alarmState as string)}</b>`,
-            ...photosFor(alarmState as string),
         });
     } else if (timestampMoved && alarmState) {
         events.push({
             category: 'alarm',
             throttleKey: `alarm:state:transition:${alarmLastChanged}`,
             message: `🛡️ <b>Alarme ${alarmStateLabel(alarmState)}</b> (transition manquée)`,
-            ...photosFor(alarmState),
         });
     }
 
@@ -115,7 +108,6 @@ function detectAlarm(ctx: DetectContext, previous: AlertSnapshot['alarm']): Cate
             category: 'alarm',
             throttleKey: 'alarm:siren',
             message: '🚨 <b>Sirène déclenchée !</b>',
-            ...(ctx.arloCameras.length > 0 ? { photoCameras: ctx.arloCameras } : {}),
         });
     }
 
@@ -212,7 +204,6 @@ function detectMotion(ctx: DetectContext, previous: AlertSnapshot['motion'], ala
             category: 'motion',
             throttleKey: 'motion:armed',
             message: `🚨 <b>Mouvement détecté</b> (${triggeredNames}) — alarme activée`,
-            photoCameras: ctx.arloCameras,
         });
     }
     return { events, next: { sensors } };

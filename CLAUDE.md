@@ -2,7 +2,7 @@
 
 Back **Next.js 16 (App Router, API uniquement)** déployé sur Vercel : proxy sécurisé entre le front
 `home` et Home Assistant, plus les intégrations tierces (Enedis, GRDF, Suez, Petkit,
-Arlo via HA, Telegram). Auth Clerk 7, PostgreSQL (Supabase) via Prisma 7 (adaptateur `pg`), rate limit
+Arlo via HA). Auth Clerk 7, PostgreSQL (Supabase) via Prisma 7 (adaptateur `pg`), rate limit
 Upstash, stockage R2.
 
 ## Commandes
@@ -58,7 +58,7 @@ Cycle d'une requête :
   inconnu, `withAuth` lit son email **vérifié** dans l'API Clerk (jamais les claims du jeton) et ne
   crée l'utilisateur que si cet email est dans `ALLOWED_EMAILS` ou `ADMIN_EMAILS` (admin pour ce
   dernier) ; sinon 403 `USER_NOT_FOUND`, sans rien écrire en base. Un utilisateur déjà en base avec
-  cet email est **rattaché** au nouvel id Clerk (groupe, préférences, Telegram conservés) : les ids
+  cet email est **rattaché** au nouvel id Clerk (groupe, préférences, notifications conservés) : les ids
   changent au passage de l'instance Clerk de développement à celle de production. L'inscription
   Clerk doit rester fermée (invitation ou allowlist), cette liste n'en est que le second verrou.
 - IP cliente (`lib/client-ip.ts`) : `cf-connecting-ip` n'est cru que si l'en-tête `x-origin-secret`
@@ -105,7 +105,7 @@ Cycle d'une requête :
   invalide) passerait pour une session Clerk expirée côté front. Erreur HA → 502 générique ; seul un
   404 d'entité inconnue (images, caméras) reste 404.
 - Routes sans `withAuth`, protégées autrement : `health` (publique : statut seulement, jamais la
-  version déployée), `cron` (Bearer `CRON_SECRET`), `telegram/webhook` (en-tête secret).
+  version déployée), `cron` (Bearer `CRON_SECRET`).
 - Planification : **un seul job** chez cron-job.org, `/api/cron?task=check-alerts` chaque minute. Après
   les alertes, il lance au plus une tâche de maintenance due (`lib/integrations/maintenance`) :
   compteurs d'usage de la veille, synchro Enedis toutes les 4 h, purge R2 (images de plus de 7 jours)
@@ -125,8 +125,8 @@ Cycle d'une requête :
   caméras.
 - Notifications (cloche du front et Web Push, `lib/integrations/notifications/`) : le moteur
   d'alertes enregistre chaque alerte pour **chaque admin** (table `Notification`, gardée 30 jours)
-  et la pousse sur ses appareils abonnés (`WebPushSubscription`), en plus de Telegram (qui reste
-  réservé aux admins ayant lié un chat). Routes admin : `GET /api/notifications`,
+  et la pousse sur ses appareils abonnés (`WebPushSubscription`) ; c'est le seul canal (Telegram et
+  les photos jointes aux alertes ont été retirés en novembre 2026). Routes admin : `GET /api/notifications`,
   `POST /api/notifications/read`, `POST /api/push/subscription`, `POST /api/push/unsubscribe`
   (POST : la CORS n'autorise que GET et POST), `GET /api/push/public-key`. Le push exige
   `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` et `VAPID_SUBJECT` (`mailto:…`) ; sans elles, les
@@ -138,11 +138,11 @@ Cycle d'une requête :
   (`npx prisma migrate deploy`) avec `DIRECT_URL`, le pooler Supabase en mode **session** (port
   5432) ; l'application utilise `DATABASE_URL`, le mode transaction (port 6543). Par le port 6543,
   `migrate` reste bloqué indéfiniment sur son verrou (advisory lock).
-- Vercel Hobby : `cron` déclare `maxDuration = 60`, le webhook Telegram 30 ; les autres routes gardent
+- Vercel Hobby : `cron` déclare `maxDuration = 60` ; les autres routes gardent
   le défaut Vercel (300 s avec Fluid compute, 10 s sans).
 - Les tests tournent en `TZ=UTC` comme Vercel. Les snapshots de caractérisation (Petkit, alertes) ne
   se mettent à jour (`-u`) que pour un changement de comportement voulu et expliqué.
-- Secrets dans `.env.local` (HA, Clerk, Upstash, Enedis, R2, Telegram, `CRON_SECRET`,
+- Secrets dans `.env.local` (HA, Clerk, Upstash, Enedis, R2, `CRON_SECRET`,
   `CF_ORIGIN_SECRET`) : ne les lis pas et ne les recopie jamais dans du code, un log ou une config.
 
 ## Projet multi-dépôts

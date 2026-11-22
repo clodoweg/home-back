@@ -38,7 +38,6 @@ export default defineConfig({
                         'lib/origin-guard.ts',
                         'proxy.ts',
                         'app/api/cron/route.ts',
-                        'app/api/telegram/webhook/route.ts',
                     ].map(path => [path, { lines: 95, branches: 95, functions: 95, statements: 95 }]),
                 ),
             },

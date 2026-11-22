@@ -55,8 +55,8 @@ const baseSnapshot = (overrides: Partial<AlertSnapshot> = {}): AlertSnapshot => 
     ...overrides,
 });
 
-describe('detectAlerts — alarm transitions attach photoCameras', () => {
-    it('disarmed → armed_away emits alarm event with photoCameras', () => {
+describe('detectAlerts — alarm transitions', () => {
+    it('disarmed → armed_away emits an alarm event', () => {
         const { events } = detectAlerts({
             states: baseStates({ [ALARM_ID]: { state: 'armed_away' } }),
             lightsByArea: {},
@@ -66,13 +66,10 @@ describe('detectAlerts — alarm transitions attach photoCameras', () => {
 
         const alarmEvents = events.filter((e) => e.category === 'alarm');
         expect(alarmEvents).toHaveLength(1);
-        expect(alarmEvents[0].photoCameras).toEqual(
-            expect.arrayContaining(['camera.aarlo_salon', 'camera.aarlo_entree']),
-        );
         expect(alarmEvents[0].message).toContain('activée');
     });
 
-    it('armed_away → disarmed emits alarm event with photoCameras', () => {
+    it('armed_away → disarmed emits an alarm event', () => {
         const { events } = detectAlerts({
             states: baseStates({ [ALARM_ID]: { state: 'disarmed' } }),
             lightsByArea: {},
@@ -82,11 +79,10 @@ describe('detectAlerts — alarm transitions attach photoCameras', () => {
 
         const alarmEvents = events.filter((e) => e.category === 'alarm');
         expect(alarmEvents).toHaveLength(1);
-        expect(alarmEvents[0].photoCameras?.length).toBe(2);
         expect(alarmEvents[0].message).toContain('désactivée');
     });
 
-    it('armed_away → triggered emits alarm event with photoCameras', () => {
+    it('armed_away → triggered emits an alarm event', () => {
         const { events } = detectAlerts({
             states: baseStates({ [ALARM_ID]: { state: 'triggered' } }),
             lightsByArea: {},
@@ -96,11 +92,10 @@ describe('detectAlerts — alarm transitions attach photoCameras', () => {
 
         const alarmEvents = events.filter((e) => e.category === 'alarm');
         expect(alarmEvents).toHaveLength(1);
-        expect(alarmEvents[0].photoCameras?.length).toBe(2);
         expect(alarmEvents[0].message).toContain('déclenchée');
     });
 
-    it('siren off → on emits alarm:siren event with photoCameras', () => {
+    it('siren off → on emits alarm:siren event', () => {
         const { events } = detectAlerts({
             states: baseStates({
                 [ALARM_ID]: { state: 'triggered' },
@@ -113,7 +108,6 @@ describe('detectAlerts — alarm transitions attach photoCameras', () => {
 
         const sirenEvent = events.find((e) => e.throttleKey === 'alarm:siren');
         expect(sirenEvent).toBeDefined();
-        expect(sirenEvent?.photoCameras?.length).toBe(2);
     });
 
     it('no transition → no alarm event', () => {
@@ -128,7 +122,7 @@ describe('detectAlerts — alarm transitions attach photoCameras', () => {
 });
 
 describe('detectAlerts — motion while armed', () => {
-    it('motion off → on while armed emits motion event with all cameras', () => {
+    it('motion off → on while armed emits a motion event', () => {
         const { events } = detectAlerts({
             states: baseStates({
                 [ALARM_ID]: { state: 'armed_away' },
@@ -142,9 +136,6 @@ describe('detectAlerts — motion while armed', () => {
         const motionEvents = events.filter((e) => e.category === 'motion');
         expect(motionEvents).toHaveLength(1);
         expect(motionEvents[0].throttleKey).toBe('motion:armed');
-        expect(motionEvents[0].photoCameras).toEqual(
-            expect.arrayContaining(['camera.aarlo_salon', 'camera.aarlo_entree']),
-        );
         expect(motionEvents[0].message).toContain('salon');
     });
 

@@ -2,7 +2,7 @@
 
 Back Next.js (API uniquement) du projet Home Sweet Home. Il sert de proxy sécurisé entre le front
 [`home`](../home) et Home Assistant, gère l'authentification Clerk, les droits par groupe
-d'utilisateurs, et les intégrations tierces (Enedis, GRDF, Suez, Petkit, Telegram).
+d'utilisateurs, et les intégrations tierces (Enedis, GRDF, Suez, Petkit).
 
 - Production : https://home-back.psaltery.org (Vercel)
 - Base : PostgreSQL (Supabase) via Prisma 7 ; rate limit Upstash Redis ; stockage Cloudflare R2.
@@ -48,11 +48,11 @@ Les autres variables activent les fonctions correspondantes :
   (`sensor.<numéro>_consommation_d_eau_hier`) ; sans lui, pas de données d'eau ;
 - `PETKIT_DEVICE_ID` : identifiant du distributeur Petkit, qui nomme le dossier de ses photos dans
   les médias HA ; sans lui, pas de photos des repas ;
-- `CRON_SECRET`, Upstash, Enedis, R2, Telegram, webhooks d'alerte de sécurité.
+- `CRON_SECRET`, Upstash, Enedis, R2, webhooks d'alerte de sécurité.
 
 ## API
 
-Les routes sont dans `app/api/`. Sauf `health`, `cron` et `telegram/webhook`, elles
+Les routes sont dans `app/api/`. Sauf `health` et `cron`, elles
 exigent un en-tête `Authorization: Bearer <JWT Clerk>` obtenu par le front (jamais en query string).
 
 ## Vérifications

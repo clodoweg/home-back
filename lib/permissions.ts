@@ -41,7 +41,7 @@ export const canRenderHATemplate = (user: MaybeSubject): boolean => user?.group 
 
 /**
  * Whether the user gets the alerts in the front's bell and as Web Push notifications. Alerts
- * describe the whole house (alarm, cameras, consumption): admin group only, like Telegram.
+ * describe the whole house (alarm, cameras, consumption): admin group only.
  *
  * @param user - Authenticated user.
  * @returns true for the admin group only.

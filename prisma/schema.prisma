@@ -16,7 +16,6 @@ model User {
   widgetPreferences       Json      @default("{}")
   createdAt               DateTime  @default(now())
   theme                   String    @default("dark")
-  telegramChatId          String?
   notificationPreferences Json      @default("{}")
   userGroup               UserGroup @relation(fields: [group], references: [name])
   notifications           Notification[]

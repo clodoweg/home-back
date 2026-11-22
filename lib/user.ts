@@ -106,8 +106,8 @@ export async function getOrCreateUser(clerkId: string, email: string): Promise<A
 
 /**
  * Gives a database user to a Clerk account seen for the first time, if its email is allowed.
- * A user already holding this email is re-attached to the new Clerk id, with its group, preferences,
- * Telegram chat and notifications: Clerk ids change when the accounts move to another instance
+ * A user already holding this email is re-attached to the new Clerk id, with its group, preferences
+ * and notifications: Clerk ids change when the accounts move to another instance
  * (development to production), and a person deleting then re-creating their account gets a new id.
  *
  * WARNING: `verifiedEmail` must come from Clerk with a verified status. The re-attachment trusts it

@@ -1,5 +1,5 @@
 /**
- * Telegram alert throttle — 5 min per (user, throttleKey).
+ * Alert throttle — 5 min per (user, throttleKey).
  * Redis when available, in-memory fallback with timestamps otherwise.
  */
 import { redis } from '@/lib/redis';

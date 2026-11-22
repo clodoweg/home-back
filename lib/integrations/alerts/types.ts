@@ -14,14 +14,8 @@ export interface AlertEvent {
     category: AlertCategory;
     /** Stable key used for throttling (same key = same throttle bucket). */
     throttleKey: string;
-    /** Message sent to Telegram (HTML-formatted). */
+    /** Message with light HTML markup (`<b>`, `<i>`), turned into plain text for the bell and push. */
     message: string;
-    /**
-     * Camera entity_ids to capture and attach to the Telegram message.
-     * When set, the runner triggers snapshots, fetches the images, and dispatches
-     * via sendMediaGroup instead of sendMessage.
-     */
-    photoCameras?: string[];
 }
 
 /** Snapshot persisted between runs to detect transitions. */

@@ -1,7 +1,7 @@
 /**
  * notifications — Alerts as the front's bell lists them (stored per admin, kept 30 days) and as
- * Web Push notifications on the devices that subscribed. Fed by the alert runner, next to
- * Telegram; never makes it fail.
+ * Web Push notifications on the devices that subscribed. Fed by the alert runner; never makes it
+ * fail.
  */
 import webpush from 'web-push';
 
@@ -39,9 +39,9 @@ const ENTITIES: Record<string, string> = {
 };
 
 /**
- * Plain text of a Telegram HTML message: line breaks kept, tags dropped, entities decoded.
+ * Plain text of an alert message: line breaks kept, tags dropped, entities decoded.
  *
- * @param html - Message as sent to Telegram.
+ * @param html - Alert message, with its light HTML markup.
  * @returns The text, trimmed, without blank lines.
  */
 export function htmlToText(html: string): string {
@@ -83,7 +83,7 @@ const GONE_STATUSES = new Set([404, 410]);
 
 /**
  * Stores an alert for a user's bell and pushes it to the user's subscribed devices. Failures
- * are logged, never thrown: the Telegram message must still go out.
+ * are logged, never thrown: the other admins must still be notified.
  *
  * @param userId - Recipient (an admin).
  * @param event - The alert.
