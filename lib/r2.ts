@@ -10,15 +10,23 @@ const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME;
 const R2_PUBLIC_URL_CONFIG = process.env.R2_PUBLIC_URL;
 const R2_PUBLIC_URL = R2_PUBLIC_URL_CONFIG || R2_ENDPOINT;
 
+const R2_PRIVATE_HOST_SUFFIX = 'cloudflarestorage.com';
+
 /**
- * Check if the R2 configuration allows public access via a browser.
- * If R2_PUBLIC_URL is the default endpoint (cloudflarestorage.com), 
- * it's private and won't work in <Image /> tags without signatures.
+ * Whether R2_PUBLIC_URL can be opened by a browser without a signature. The S3 endpoint
+ * (`<account>.r2.cloudflarestorage.com`) is private; the check reads the URL's host rather than
+ * searching the whole string. An invalid URL counts as private: `proxyImageViaR2` then serves the
+ * bytes instead of redirecting to a broken address.
+ *
+ * @returns True when R2_PUBLIC_URL is a valid URL whose host is not the private R2 endpoint.
  */
 export function isR2Public(): boolean {
     const publicUrl = process.env.R2_PUBLIC_URL;
-    const isPublic = Boolean(publicUrl && !publicUrl.includes('cloudflarestorage.com'));
-    return isPublic;
+    if (!publicUrl || !URL.canParse(publicUrl)) return false;
+    const { hostname } = new URL(publicUrl);
+    const isPrivateEndpoint =
+        hostname === R2_PRIVATE_HOST_SUFFIX || hostname.endsWith(`.${R2_PRIVATE_HOST_SUFFIX}`);
+    return !isPrivateEndpoint;
 }
 
 const isConfigured = Boolean(R2_ACCESS_KEY_ID && R2_SECRET_ACCESS_KEY && R2_ENDPOINT && R2_BUCKET_NAME);
