@@ -55,7 +55,7 @@ describe('notifications', () => {
         });
 
         it('leaves no tag behind when tags are nested to rebuild one', () => {
-            expect(htmlToText('<scr<b>ipt>alert(1)</scr</b>ipt>')).toBe('scriptalert(1)/script');
+            expect(htmlToText('<scr<b>ipt>alert(1)</scr</b>ipt>')).toBe('alert(1)');
         });
     });
 
