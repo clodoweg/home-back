@@ -24,9 +24,13 @@ npx prisma studio                    # Explorateur de base
 
 Avant de considérer une tâche terminée : `npm run typecheck`, `npm run lint` (ESLint flat config,
 zéro avertissement toléré) puis `npm run test:coverage` (seuils bloquants). Les trois doivent passer ;
-la CI GitHub lance la même chaîne, sur les PR seulement (quota Actions limité : pas de déclencheur
-`push`, pas de run pour un changement limité aux `.md` ; l’audit npm ne tourne que si `package.json`
-ou `package-lock.json` change, et chaque semaine).
+la CI GitHub (`test.yml`) lance la même chaîne sur les PR vers `main` et sur `main` après la fusion,
+pas pour un changement limité aux `.md`. Le dépôt est **public** : les runners GitHub standard ne
+consomment aucune minute du quota du compte (restrictions de novembre 2026 levées le 22 novembre
+2026). `codeql.yml` : analyse de sécurité CodeQL (requêtes `security-extended`, TypeScript et
+workflows) aux mêmes moments et chaque semaine, résultats dans Security → Code scanning ;
+`security-audit.yml` : audit npm (dépendances de prod) et Dependency Review, si `package.json` ou
+`package-lock.json` change, et chaque semaine.
 
 ## Architecture
 
