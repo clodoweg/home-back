@@ -26,9 +26,10 @@ paths:
   IP) dans la réponse : détail dans `logger`, message générique au client. Réponse authentifiée :
   `Cache-Control: private`.
 - Droits : helpers de `lib/permissions.ts` (`canAccessHistory`, `canAccessCameras`,
-  `canProxyCamera`, `canSeeCameraEntities`, `canCallHAService`). Toute route qui **agit** sur la
-  maison (service HA, capture, distributeur…) exige `canActOnHome` (groupe admin seulement). Un
-  refus se journalise avec `logger.security(...)`.
+  `canProxyCamera`, `canSeeCameraEntities`, `canCallHAService`, `canRunHAAction`). Une action
+  Home Assistant passe par `canRunHAAction` : tout pour l'admin, les seules actions du tableau de
+  bord (`DASHBOARD_ACTIONS`) pour les autres groupes. Un refus se journalise avec
+  `logger.security(...)`.
 - Contrôleur léger : la logique métier et le filtrage vont dans `lib/integrations/`, pas dans la route.
 - Home Assistant uniquement via `haGet` / `haPost` / `haFetch` / `haFetchBinary` (`lib/haClient.ts`),
   jamais par `fetch` direct.

@@ -2,22 +2,14 @@ import { withAuth } from '@/lib/api-middleware';
 import { triggerFeederManual } from '@/lib/integrations/petkit';
 import { ApiResponse } from '@/lib/api-response';
 import { petkitFeedSchema, validateBody } from '@/lib/validators';
-import { canActOnHome } from '@/lib/permissions';
 import { logger } from '@/lib/logger';
 
 /**
  * POST /api/petkit/feed
- * Triggers a manual feed on the PetKit feeder, for the admin group only (`canActOnHome`).
+ * Triggers a manual feed on the PetKit feeder.
  * Body: { deviceId: number, amount1?: number, amount2?: number }
- *
- * @returns 200 once dispensed, 400 on an invalid body, 403 outside the admin group, 500 when PetKit fails.
  */
-export const POST = withAuth(async (request, { user, userEmail }) => {
-    if (!canActOnHome(user)) {
-        logger.security('Blocked feeder action', { userEmail });
-        return ApiResponse.forbidden('Forbidden: Group restriction');
-    }
-
+export const POST = withAuth(async (request: Request) => {
     const validation = await validateBody(request, petkitFeedSchema);
     if (!validation.success) return validation.error;
 

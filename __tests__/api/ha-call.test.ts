@@ -118,7 +118,7 @@ describe('POST /api/ha/call — target override (S09)', () => {
 
 });
 
-describe('POST /api/ha/call — only the owner acts on the house', () => {
+describe('POST /api/ha/call — the family runs the dashboard actions only', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         clearMockUsers();
@@ -129,24 +129,26 @@ describe('POST /api/ha/call — only the owner acts on the house', () => {
     const callAs = (body: Record<string, unknown>) =>
         POST(new Request('http://localhost:3000/api/ha/call', { method: 'POST', body: JSON.stringify(body) }), { params });
 
+    it('lets the user group and children run a dashboard action', async () => {
+        mockAsUser();
+        setMockUser(STANDARD_USER.clerkId, STANDARD_USER);
+        expect((await callAs({ domain: 'light', service: 'turn_on', entity_id: 'light.salon' })).status).toBe(200);
+
+        mockAsChildren();
+        setMockUser(CHILDREN_USER.clerkId, CHILDREN_USER);
+        expect((await callAs({ domain: 'scene', service: 'turn_on', entity_id: 'scene.soiree' })).status).toBe(200);
+    });
+
     it.each([
-        ['a light', { domain: 'light', service: 'turn_on', entity_id: 'light.salon' }],
         ['a lock', { domain: 'lock', service: 'unlock', entity_id: 'lock.porte_entree' }],
         ['a script', { domain: 'script', service: 'turn_on', entity_id: 'script.coucher' }],
         ['an automation', { domain: 'automation', service: 'trigger', entity_id: 'automation.desarmement' }],
+        ['a garage door', { domain: 'cover', service: 'open_cover', entity_id: 'cover.garage' }],
     ])('refuses %s to the user group, even with the remote right', async (_label, body) => {
         mockAsUser();
         setMockUser(STANDARD_USER.clerkId, STANDARD_USER);
 
         expect((await callAs(body)).status).toBe(403);
-        expect(haPost).not.toHaveBeenCalled();
-    });
-
-    it('refuses every action to children', async () => {
-        mockAsChildren();
-        setMockUser(CHILDREN_USER.clerkId, CHILDREN_USER);
-
-        expect((await callAs({ domain: 'light', service: 'turn_off', entity_id: 'light.salon' })).status).toBe(403);
         expect(haPost).not.toHaveBeenCalled();
     });
 });
