@@ -48,6 +48,10 @@ export function htmlToText(html: string): string {
     return html
         .replace(/<br\s*\/?>/gi, '\n')
         .replace(/<[^<>]*>/g, '')
+        // A tag split by another (`<scr<b>ipt>`) would come back whole after one pass: dropping
+        // every leftover angle bracket completes the sanitization in linear time. Escaped `<` and
+        // `>` from the message (Home Assistant names) are entities here, decoded just after.
+        .replace(/[<>]/g, '')
         .replace(/&(?:amp|lt|gt|quot|#39|nbsp);/g, (entity) => ENTITIES[entity])
         .split('\n')
         .map((line) => line.replace(/\s+/g, ' ').trim())
