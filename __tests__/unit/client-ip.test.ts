@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { expandIpv6, getClientIp, isFromCloudflare, isSameIpv6Prefix64, normalizeIp } from '@/lib/client-ip';
+import { expandIpv6, getClientIp, getOriginSecretStatus, isFromCloudflare, isSameIpv6Prefix64, normalizeIp } from '@/lib/client-ip';
 import { safeCompare } from '@/lib/secure-compare';
 
 const ORIGIN_SECRET = 'cf_origin_test_secret';
@@ -61,6 +61,27 @@ describe('isFromCloudflare', () => {
 
     it('is false without a configured secret, even if the header is empty', () => {
         expect(isFromCloudflare(new Headers({ 'x-origin-secret': '' }))).toBe(false);
+    });
+});
+
+describe('getOriginSecretStatus', () => {
+    afterEach(() => {
+        delete process.env.CF_ORIGIN_SECRET;
+    });
+
+    it('tells a matching, missing and wrong secret apart', () => {
+        process.env.CF_ORIGIN_SECRET = ORIGIN_SECRET;
+
+        expect(getOriginSecretStatus(new Headers({ 'x-origin-secret': ORIGIN_SECRET }))).toBe('ok');
+        expect(getOriginSecretStatus(new Headers())).toBe('missing');
+        expect(getOriginSecretStatus(new Headers({ 'x-origin-secret': '' }))).toBe('missing');
+        expect(getOriginSecretStatus(new Headers({ 'x-origin-secret': `${ORIGIN_SECRET}x` }))).toBe('mismatch');
+        // HTTP strips the whitespace around a header value: a stray space never breaks the check
+        expect(getOriginSecretStatus(new Headers({ 'x-origin-secret': ` ${ORIGIN_SECRET} ` }))).toBe('ok');
+    });
+
+    it('reports an unset CF_ORIGIN_SECRET, whatever the header', () => {
+        expect(getOriginSecretStatus(new Headers({ 'x-origin-secret': ORIGIN_SECRET }))).toBe('unconfigured');
     });
 });
 

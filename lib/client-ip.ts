@@ -11,6 +11,24 @@ import { logger } from './logger';
 
 export const ORIGIN_SECRET_HEADER = 'x-origin-secret';
 
+/** What the origin secret of a request says about its path: through our Cloudflare zone or not. */
+export type OriginSecretStatus = 'ok' | 'missing' | 'mismatch' | 'unconfigured';
+
+/**
+ * Checks the origin secret injected by the Cloudflare Request Header Transform Rule.
+ *
+ * @param headers - Incoming request headers.
+ * @returns 'ok' when `x-origin-secret` matches `CF_ORIGIN_SECRET`, 'missing' without the header,
+ *          'mismatch' with another value, 'unconfigured' when `CF_ORIGIN_SECRET` is not set.
+ */
+export function getOriginSecretStatus(headers: Pick<Headers, 'get'>): OriginSecretStatus {
+    const originSecret = process.env.CF_ORIGIN_SECRET;
+    if (!originSecret) return 'unconfigured';
+    const providedSecret = headers.get(ORIGIN_SECRET_HEADER);
+    if (!providedSecret) return 'missing';
+    return safeCompare(providedSecret, originSecret) ? 'ok' : 'mismatch';
+}
+
 /**
  * Tells whether the request went through our Cloudflare zone.
  *
@@ -18,9 +36,7 @@ export const ORIGIN_SECRET_HEADER = 'x-origin-secret';
  * @returns true when `x-origin-secret` matches `CF_ORIGIN_SECRET`.
  */
 export function isFromCloudflare(headers: Pick<Headers, 'get'>): boolean {
-    const originSecret = process.env.CF_ORIGIN_SECRET;
-    if (!originSecret) return false;
-    return safeCompare(headers.get(ORIGIN_SECRET_HEADER) ?? '', originSecret);
+    return getOriginSecretStatus(headers) === 'ok';
 }
 
 /**

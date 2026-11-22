@@ -64,9 +64,13 @@ Cycle d'une requête :
 - IP cliente (`lib/client-ip.ts`) : `cf-connecting-ip` n'est cru que si l'en-tête `x-origin-secret`
   injecté par Cloudflare vaut `CF_ORIGIN_SECRET` ; sinon l'IP posée par Vercel fait foi. Tout repose
   sur ce secret : il ne doit **jamais** apparaître dans une réponse (règle Cloudflare de type
-  *Request Header*, pas *Response Header*), et une règle du
-  pare-feu Vercel refuse toute requête qui ne le porte pas (le domaine de prod reste joignable chez
-  Vercel sans passer par Cloudflare). Changer le secret = Vercel (variable et règle) + Cloudflare.
+  *Request Header*, pas *Response Header*). Le domaine de prod reste joignable chez Vercel sans
+  passer par Cloudflare : `proxy.ts` appelle d'abord `guardOrigin` (`lib/origin-guard.ts`), qui en
+  production Vercel journalise chaque requête (`Origin check ok` / `missing` / `mismatch`) et, avec
+  `ENFORCE_ORIGIN_SECRET=true`, refuse en 403 (`ORIGIN_FORBIDDEN`) celles sans le bon secret. Une
+  règle du pare-feu Vercel faisant ce contrôle refusait toutes les requêtes, bien que l'en-tête
+  arrive aux fonctions : elle reste en *Log*. Changer le secret = Vercel (variable, règle du
+  pare-feu) + Cloudflare.
   Réseau maison (`isOnHomeNetwork`, `lib/permissions.ts`) : réseau local, plus l'IP publique du nom
   DDNS de `HOME_DDNS_HOSTNAME` (variable Vercel, jamais en dur : elle révèle l'IP de la maison).
 - Le dépôt est **public** : aucun identifiant personnel en dur (numéros de compteur, de contrat,

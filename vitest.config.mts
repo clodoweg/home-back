@@ -35,6 +35,7 @@ export default defineConfig({
                         'lib/user.ts',
                         'lib/ha-state-filter.ts',
                         'lib/ratelimit.ts',
+                        'lib/origin-guard.ts',
                         'proxy.ts',
                         'app/api/cron/route.ts',
                         'app/api/telegram/webhook/route.ts',

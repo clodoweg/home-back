@@ -39,6 +39,9 @@ Les autres variables activent les fonctions correspondantes :
 - `CF_ORIGIN_SECRET` : secret injecté par Cloudflare dans les requêtes vers l'origine ; sans lui en
   production, la restriction « réseau maison » refuse les groupes sans droit `remote`. Il ne doit
   jamais apparaître dans une réponse ;
+- `ENFORCE_ORIGIN_SECRET` : `true` pour refuser (403) en production toute requête sans le bon
+  `x-origin-secret`, c'est-à-dire qui n'est pas passée par Cloudflare. Sans elle, ces requêtes sont
+  seulement journalisées (`Origin check missing` / `mismatch`) ;
 - `HOME_DDNS_HOSTNAME` : nom DDNS de la maison (QuickConnect, DuckDNS…), dont l'IP publique compte
   comme « réseau maison » ; sans lui, seules les adresses du réseau local comptent ;
 - `SUEZ_COUNTER_ID` : numéro du compteur Suez, qui nomme ses capteurs HA
