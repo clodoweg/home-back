@@ -90,6 +90,11 @@ Cycle d'une requête :
 - Les droits sont portés par `UserGroup.permissions` : drapeaux (`remote`, `history`, `cameras`,
   `admin`), joker `*` ou `entity_id` autorisés. Le groupe admin passe les contrôles d'entités ; sans
   permission `remote`, l'accès est limité au réseau de la maison.
+- **Seul le propriétaire agit sur la maison** (décision de novembre 2026) : toute action
+  (`POST /api/ha/call`, `/api/arlo/snapshot`, `/api/petkit/feed`) exige le groupe admin
+  (`canActOnHome`), quelles que soient les permissions d'un autre groupe. Le back parle à Home
+  Assistant avec un seul jeton : HA ne sait pas qui agit, ce contrôle est le seul verrou. Une
+  nouvelle route d'action passe par `canActOnHome`.
 - `POST /api/ha/template` (Jinja libre, exécuté avec le token admin HA) est **réservé au groupe
   admin** (`canRenderHATemplate`). Le front lit les pièces / étages / modèles via
   `GET /api/ha/metadata` (template figé côté serveur, en `tojson`) et la météo via
@@ -97,8 +102,8 @@ Cycle d'une requête :
 - Ne recopie jamais le statut HTTP de Home Assistant dans la réponse : un 401/403 de HA (token HA
   invalide) passerait pour une session Clerk expirée côté front. Erreur HA → 502 générique ; seul un
   404 d'entité inconnue (images, caméras) reste 404.
-- Routes sans `withAuth`, protégées autrement : `health` (publique), `cron` (Bearer `CRON_SECRET`),
-  `telegram/webhook` (en-tête secret).
+- Routes sans `withAuth`, protégées autrement : `health` (publique : statut seulement, jamais la
+  version déployée), `cron` (Bearer `CRON_SECRET`), `telegram/webhook` (en-tête secret).
 - Planification : **un seul job** chez cron-job.org, `/api/cron?task=check-alerts` chaque minute. Après
   les alertes, il lance au plus une tâche de maintenance due (`lib/integrations/maintenance`) :
   compteurs d'usage de la veille, synchro Enedis toutes les 4 h, purge R2 (images de plus de 7 jours)

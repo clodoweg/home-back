@@ -4,11 +4,17 @@ import { hasHAConfig } from '@/lib/env';
 
 /**
  * Health Check Endpoint
- * 
+ *
  * Used by:
  * - Load balancers
  * - Uptime monitoring (UptimeRobot, Pingdom, etc.)
  * - Vercel edge network
+ *
+ * WARNING: public route (no withAuth). It answers the status only: the deployed commit would tell
+ * anyone reading the public repository whether a given fix is live (audit L3). The deployed
+ * version shows in the Vercel dashboard.
+ *
+ * @returns 200 when healthy, 503 when degraded or when the API is disabled.
  */
 export async function GET() {
     // 🟢 Check if API is enabled globally
@@ -28,7 +34,6 @@ export async function GET() {
     return ApiResponse.success(
         {
             status: allHealthy ? 'healthy' : 'degraded',
-            version: process.env.VERCEL_GIT_COMMIT_SHA?.substring(0, 7) || 'local',
             checks,
         },
         allHealthy ? 200 : 503,

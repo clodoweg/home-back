@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { POST } from '@/app/api/ha/call/route';
 import { setMockUser, clearMockUsers } from '../setup';
-import { mockAsChildren, mockAsAdmin } from '../helpers/mock-auth';
-import { ADMIN_USER, CHILDREN_USER } from '../helpers/test-users';
+import { mockAsChildren, mockAsAdmin, mockAsUser } from '../helpers/mock-auth';
+import { ADMIN_USER, CHILDREN_USER, STANDARD_USER } from '../helpers/test-users';
 import { mockHACallService, mockHAError, resetHAMocks } from '../helpers/mock-ha';
 import { haPost } from '@/lib/haClient';
 
@@ -82,17 +82,14 @@ describe('POST /api/ha/call — target override (S09)', () => {
         vi.clearAllMocks();
         clearMockUsers();
         resetHAMocks();
-        mockAsChildren();
-        setMockUser(CHILDREN_USER.clerkId, CHILDREN_USER);
+        mockAsAdmin();
+        setMockUser(ADMIN_USER.clerkId, ADMIN_USER);
         mockHACallService({});
     });
 
     it('sends only the checked entity_id, whatever service_data contains', async () => {
         const req = new Request('http://localhost:3000/api/ha/call', {
             method: 'POST',
-            // Matching domain (light → light.salon): children may call it, so the test exercises
-            // the stripTargetOverrides path. A mismatched/generic domain is now refused upstream
-            // by canCallHAService (audit M-1), covered in unit + matrix tests.
             body: JSON.stringify({
                 domain: 'light',
                 service: 'turn_off',
@@ -119,15 +116,37 @@ describe('POST /api/ha/call — target override (S09)', () => {
         );
     });
 
-    it('still refuses a sensitive entity to children', async () => {
-        const req = new Request('http://localhost:3000/api/ha/call', {
-            method: 'POST',
-            body: JSON.stringify({ domain: 'lock', service: 'unlock', entity_id: 'lock.porte_entree' }),
-        });
+});
 
-        const res = await POST(req, { params });
+describe('POST /api/ha/call — only the owner acts on the house', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+        clearMockUsers();
+        resetHAMocks();
+        mockHACallService({});
+    });
 
-        expect(res.status).toBe(403);
+    const callAs = (body: Record<string, unknown>) =>
+        POST(new Request('http://localhost:3000/api/ha/call', { method: 'POST', body: JSON.stringify(body) }), { params });
+
+    it.each([
+        ['a light', { domain: 'light', service: 'turn_on', entity_id: 'light.salon' }],
+        ['a lock', { domain: 'lock', service: 'unlock', entity_id: 'lock.porte_entree' }],
+        ['a script', { domain: 'script', service: 'turn_on', entity_id: 'script.coucher' }],
+        ['an automation', { domain: 'automation', service: 'trigger', entity_id: 'automation.desarmement' }],
+    ])('refuses %s to the user group, even with the remote right', async (_label, body) => {
+        mockAsUser();
+        setMockUser(STANDARD_USER.clerkId, STANDARD_USER);
+
+        expect((await callAs(body)).status).toBe(403);
+        expect(haPost).not.toHaveBeenCalled();
+    });
+
+    it('refuses every action to children', async () => {
+        mockAsChildren();
+        setMockUser(CHILDREN_USER.clerkId, CHILDREN_USER);
+
+        expect((await callAs({ domain: 'light', service: 'turn_off', entity_id: 'light.salon' })).status).toBe(403);
         expect(haPost).not.toHaveBeenCalled();
     });
 });

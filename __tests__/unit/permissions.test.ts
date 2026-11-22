@@ -10,6 +10,7 @@ import {
     canProxyCamera,
     canSeeCameraEntities,
     canRenderHATemplate,
+    canActOnHome,
 } from '@/lib/permissions';
 
 describe('canAccessHistory', () => {
@@ -179,5 +180,19 @@ describe('canRenderHATemplate (R1)', () => {
         expect(canRenderHATemplate({ group: 'user', userGroup: { permissions: ['*', 'admin'] } })).toBe(false);
         expect(canRenderHATemplate({})).toBe(false);
         expect(canRenderHATemplate(null)).toBe(false);
+    });
+});
+
+describe('canActOnHome (only the owner acts on the house)', () => {
+    it('allows the admin group only', () => {
+        expect(canActOnHome({ group: 'admin' })).toBe(true);
+        expect(canActOnHome({ group: 'user' })).toBe(false);
+        expect(canActOnHome({ group: 'children' })).toBe(false);
+    });
+
+    it('ignores the permissions of another group and refuses a missing user or group', () => {
+        expect(canActOnHome({ group: 'user', userGroup: { permissions: ['*', 'admin', 'remote', 'cameras', 'alarm_control'] } })).toBe(false);
+        expect(canActOnHome({})).toBe(false);
+        expect(canActOnHome(null)).toBe(false);
     });
 });

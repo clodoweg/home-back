@@ -45,6 +45,19 @@ describe('POST /api/arlo/snapshot/[entity_id]', () => {
         expect(res.status).toBe(403);
     });
 
+    it('returns 403 to a non-admin group even with the cameras right (seeing is not acting)', async () => {
+        const cameraViewer = { ...CHILDREN_USER, group: 'user', userGroup: { name: 'user', permissions: ['remote', 'cameras'] } };
+        mockAsChildren();
+        setMockUser(CHILDREN_USER.clerkId, cameraViewer);
+
+        const req = new Request('http://localhost:3000/api/arlo/snapshot/camera.aarlo_salon', {
+            method: 'POST',
+        });
+        const res = await POST(req, { params: makeParams('camera.aarlo_salon') });
+        expect(res.status).toBe(403);
+        expect(mockHaPost).not.toHaveBeenCalled();
+    });
+
     it('triggers snapshot switch and returns success for admin', async () => {
         mockAsAdmin();
         setMockUser(ADMIN_USER.clerkId, ADMIN_USER);
