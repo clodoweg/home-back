@@ -2,9 +2,6 @@ name: Security Audit
 
 # Only when the dependencies change, plus weekly for advisories published without any change.
 # `npm audit` reads package-lock.json alone: no `npm ci`, the job takes a few seconds.
-# The Dependency Review job was removed: without Dependency Graph + GitHub Advanced Security it
-# errored on every PR (it was non-blocking) and only cost Actions minutes. Bring it back once
-# those are enabled (repo Settings → Code security).
 on:
   pull_request:
     branches: [main]
@@ -52,3 +49,20 @@ jobs:
       # fix yet (e.g. GHSA-fc5q-39xc-vjpf, picomatch via vite / vitest).
       - name: Fail on high/critical vulnerabilities (production dependencies)
         run: npm audit --package-lock-only --omit=dev --audit-level=high
+
+  # Free on a public repository (it needs the dependency graph, on by default there).
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: github.event_name == 'pull_request' && !github.event.repository.private
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v5
+        with:
+          fail-on-severity: high
+          # Same license policy as the front
+          deny-licenses: GPL-3.0, AGPL-3.0
