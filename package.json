@@ -47,6 +47,7 @@
   "overrides": {
     "fast-xml-parser": "^5.7.1",
     "postcss": "^8.5.10",
-    "effect": "3.22.5"
+    "effect": "3.22.5",
+    "minimatch": "^11.0.9"
   }
 }
