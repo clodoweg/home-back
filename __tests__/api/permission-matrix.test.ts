@@ -3,6 +3,8 @@
  * Users carry the default group permissions created by lib/user.ts. A change here is a
  * change of the rights model and must be deliberate. Known risks of the October 2026 audit
  * (R2–R8, report kept out of the repository) are locked as they are, not fixed; R1 (free templates) is fixed: admin group only.
+ * Since November 2026 every action on the house (HA service calls, camera capture, feeder; R2
+ * fixed) is admin only: the owner is the only person who acts on the house.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { auth } from '@clerk/nextjs/server';
@@ -95,9 +97,11 @@ const ROUTES: RouteCase[] = [
     { name: 'GET ha/forecast', handler: haForecast, url: '/api/ha/forecast?entity_id=weather.maison&type=daily', expected: ALL_OK },
     // R1 fixed: free Jinja runs with the HA admin token, admin group only
     { name: 'POST ha/template', handler: haTemplate, url: '/api/ha/template', method: 'POST', body: { template: '{{ 1 }}' }, expected: ADMIN_ONLY },
-    { name: 'POST ha/call light', handler: haCall, url: '/api/ha/call', method: 'POST', body: { domain: 'light', service: 'turn_on', entity_id: 'light.salon' }, expected: ALL_OK },
-    { name: 'POST ha/call lock', handler: haCall, url: '/api/ha/call', method: 'POST', body: { domain: 'lock', service: 'unlock', entity_id: 'lock.porte' }, expected: { admin: 200, user: 200, children: 403 } },
-    { name: 'POST ha/call camera entity', handler: haCall, url: '/api/ha/call', method: 'POST', body: { domain: 'camera', service: 'turn_off', entity_id: 'camera.aarlo_salon' }, expected: { admin: 200, user: 200, children: 403 } },
+    { name: 'POST ha/call light', handler: haCall, url: '/api/ha/call', method: 'POST', body: { domain: 'light', service: 'turn_on', entity_id: 'light.salon' }, expected: ADMIN_ONLY },
+    { name: 'POST ha/call lock', handler: haCall, url: '/api/ha/call', method: 'POST', body: { domain: 'lock', service: 'unlock', entity_id: 'lock.porte' }, expected: ADMIN_ONLY },
+    { name: 'POST ha/call camera entity', handler: haCall, url: '/api/ha/call', method: 'POST', body: { domain: 'camera', service: 'turn_off', entity_id: 'camera.aarlo_salon' }, expected: ADMIN_ONLY },
+    { name: 'POST ha/call script', handler: haCall, url: '/api/ha/call', method: 'POST', body: { domain: 'script', service: 'turn_on', entity_id: 'script.coucher' }, expected: ADMIN_ONLY },
+    { name: 'POST ha/call automation', handler: haCall, url: '/api/ha/call', method: 'POST', body: { domain: 'automation', service: 'trigger', entity_id: 'automation.desarmement' }, expected: ADMIN_ONLY },
     { name: 'POST ha/call alarm', handler: haCall, url: '/api/ha/call', method: 'POST', body: { domain: 'alarm_control_panel', service: 'alarm_disarm', entity_id: 'alarm_control_panel.maison' }, expected: ADMIN_ONLY },
     // audit M-1: a non-admin must not reach a sensitive entity through a mismatched/generic domain
     { name: 'POST ha/call alarm via mismatched domain', handler: haCall, url: '/api/ha/call', method: 'POST', body: { domain: 'switch', service: 'turn_off', entity_id: 'alarm_control_panel.maison' }, expected: ADMIN_ONLY },
@@ -114,8 +118,8 @@ const ROUTES: RouteCase[] = [
     // R3: gas data without history check (the sensor.gazpar state used to require it)
     { name: 'GET grdf', handler: grdf, url: '/api/grdf', expected: ALL_OK },
     { name: 'GET petkit', handler: petkit, url: '/api/petkit', expected: ALL_OK },
-    // R2: any group can trigger the feeder
-    { name: 'POST petkit/feed', handler: petkitFeed, url: '/api/petkit/feed', method: 'POST', body: { deviceId: 1, amount1: 1 }, expected: ALL_OK },
+    // R2 fixed: feeding is an action on the house, admin only
+    { name: 'POST petkit/feed', handler: petkitFeed, url: '/api/petkit/feed', method: 'POST', body: { deviceId: 1, amount1: 1 }, expected: ADMIN_ONLY },
 ];
 
 function loginAs(group: Group) {

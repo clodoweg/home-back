@@ -40,6 +40,17 @@ export const canAccessCameras = (user: MaybeSubject): boolean => hasPermission(u
 export const canRenderHATemplate = (user: MaybeSubject): boolean => user?.group === 'admin';
 
 /**
+ * Whether the user may act on the house: Home Assistant service calls, camera captures, feeder.
+ * WARNING: the back calls Home Assistant with a single admin token, so HA cannot tell who acts:
+ * this check is the only gate. The owner decided that only he acts on the house (November 2026):
+ * admin group only, whatever permissions another group carries.
+ *
+ * @param user - Authenticated user.
+ * @returns true for the admin group only.
+ */
+export const canActOnHome = (user: MaybeSubject): boolean => user?.group === 'admin';
+
+/**
  * Whether the user gets the alerts in the front's bell and as Web Push notifications. Alerts
  * describe the whole house (alarm, cameras, consumption): admin group only, like Telegram.
  *
