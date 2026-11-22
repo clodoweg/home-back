@@ -27,8 +27,9 @@ zéro avertissement toléré) puis `npm run test:coverage` (seuils bloquants). L
 la CI GitHub (`test.yml`) lance la même chaîne sur les PR vers `main` et sur `main` après la fusion,
 pas pour un changement limité aux `.md`. Le dépôt est **public** : les runners GitHub standard ne
 consomment aucune minute du quota du compte (restrictions de novembre 2026 levées le 22 novembre
-2026). `codeql.yml` : analyse de sécurité CodeQL (requêtes `security-extended`, TypeScript et
-workflows) aux mêmes moments et chaque semaine, résultats dans Security → Code scanning ;
+2026). CodeQL (analyse de sécurité du TypeScript et des workflows, suite « Extended ») tourne en
+**configuration par défaut** de GitHub (Settings → Code security), sans fichier : n'ajoute pas de
+`codeql.yml`, les deux configurations ne coexistent pas ; résultats dans Security → Code scanning.
 `security-audit.yml` : audit npm (dépendances de prod) et Dependency Review, si `package.json` ou
 `package-lock.json` change, et chaque semaine. Le lint inclut `eslint-plugin-sonarjs` (règles de
 SonarQube) : complexité cognitive au plus 15 par fonction, sauf les fichiers de
