@@ -1,12 +1,14 @@
 /** ESLint — flat config de l'API (Next 16 n'a plus `next lint`) */
 import js from '@eslint/js';
 import { defineConfig, globalIgnores } from 'eslint/config';
+import sonarjs from 'eslint-plugin-sonarjs';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig([
     globalIgnores(['.next/**', 'coverage/**', 'node_modules/**', 'next-env.d.ts', 'prisma/migrations/**', 'lib/generated/**']),
     js.configs.recommended,
     ...tseslint.configs.recommended,
+    sonarjs.configs.recommended,
     {
         files: ['**/*.ts'],
         languageOptions: {
