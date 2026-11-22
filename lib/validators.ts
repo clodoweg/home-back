@@ -122,7 +122,6 @@ export const widgetPreferencesSchema = z
       })
       .optional(),
     theme: z.string().max(32).optional(),
-    telegramChatId: z.string().max(64).nullable().optional(),
     notificationPreferences: z
       .object({
         alarm: z.boolean().optional(),
@@ -156,7 +155,6 @@ export const widgetPreferencesSchema = z
       v.tempThresholds !== undefined ||
       v.humThresholds !== undefined ||
       v.theme !== undefined ||
-      v.telegramChatId !== undefined ||
       v.notificationPreferences !== undefined ||
       v.notificationSpaTempThreshold !== undefined ||
       v.notificationHumidityThreshold !== undefined ||

@@ -1,5 +1,5 @@
 /**
- * Redis — client Upstash partagé (rate limit, alertes de sécurité, anti-répétition Telegram).
+ * Redis — client Upstash partagé (rate limit, alertes de sécurité, anti-répétition des alertes).
  * Null when Upstash is not configured or disabled with ENABLE_UPSTASH_REDIS=false: each
  * caller then falls back on its own in-memory behaviour.
  */

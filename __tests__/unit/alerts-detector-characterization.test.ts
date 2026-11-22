@@ -34,7 +34,7 @@ describe('detectAlerts — alarm edge cases', () => {
         ]);
     });
 
-    it('labels every alarm state and attaches no photo without Arlo camera', () => {
+    it('labels every alarm state', () => {
         const labels = ['arming', 'disarming', 'pending'].map(state =>
             detect([s('alarm_control_panel.somfy_home_alarm_maison', state)], { alarm: { state: 'disarmed' } }).events[0],
         );
@@ -44,10 +44,9 @@ describe('detectAlerts — alarm edge cases', () => {
             '🛡️ <b>Alarme en cours de désactivation</b>',
             '🛡️ <b>Alarme pending</b>',
         ]);
-        expect(labels.every(e => e.photoCameras === undefined)).toBe(true);
     });
 
-    it('emits the siren event without photo when there is no camera', () => {
+    it('emits the siren event', () => {
         const { events } = detect([s('switch.somfy_home_alarm_siren', 'on')], { alarm: { sirenOn: false } });
         expect(events).toEqual([{ category: 'alarm', throttleKey: 'alarm:siren', message: '🚨 <b>Sirène déclenchée !</b>' }]);
     });

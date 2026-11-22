@@ -5,19 +5,11 @@ exports[`detectAlerts — next snapshot shape > freezes every event (messages, k
   {
     "category": "alarm",
     "message": "🛡️ <b>Alarme déclenchée</b>",
-    "photoCameras": [
-      "camera.aarlo_salon",
-      "camera.aarlo_entree",
-    ],
     "throttleKey": "alarm:state:armed_away:triggered",
   },
   {
     "category": "alarm",
     "message": "🚨 <b>Sirène déclenchée !</b>",
-    "photoCameras": [
-      "camera.aarlo_salon",
-      "camera.aarlo_entree",
-    ],
     "throttleKey": "alarm:siren",
   },
   {

@@ -4,7 +4,7 @@
  * Supported tasks (via ?task= query param):
  *  - sync-enedis  : pull latest Enedis consumption into the DB
  *  - cleanup-r2   : delete old Cloudflare R2 objects (cameras/ + petkit/)
- *  - check-alerts : detect HA state transitions and send Telegram alerts; then the maintenance
+ *  - check-alerts : detect HA state transitions and notify the admins (bell and Web Push); then the maintenance
  *                   task due (usage counters, Enedis sync every 4 h, R2 purge daily). The only
  *                   job scheduled at cron-job.org; the other tasks stay callable by hand.
  *  - daily-usage  : compute the usage counters of the past days (History tab of the front);

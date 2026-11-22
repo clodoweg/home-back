@@ -1,17 +1,11 @@
 /**
  * Alert check runner — fetches current HA state, detects transitions against
- * last snapshot, dispatches each alert to the admin users (Telegram when they linked a chat,
- * plus the front's bell and Web Push), persists snapshot.
+ * last snapshot, dispatches each alert to the admin users (the front's bell and Web Push),
+ * persists snapshot.
  */
 import { haGet, haPost, type HAState } from '@/lib/haClient';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
-import { captureCameraPhotos } from '@/lib/integrations/arlo';
-import {
-    sendTelegramMessage,
-    sendTelegramMediaGroup,
-    type TelegramPhoto,
-} from '@/lib/integrations/telegram';
 import { notifyUser, pruneOldNotifications } from '@/lib/integrations/notifications';
 import { detectAlerts } from './detector';
 import { loadSnapshot, saveSnapshot } from './snapshot';
@@ -156,7 +150,6 @@ function getTemperatureByArea(states: HAState[], mapping: Record<string, string>
 export interface AlertCheckResult {
     ok: boolean;
     eventsDetected: number;
-    messagesSent: number;
     adminsNotified: number;
     /** Notifications stored for the front's bell (one per admin and alert). */
     notificationsStored: number;
@@ -166,7 +159,7 @@ export async function runAlertCheck(): Promise<AlertCheckResult> {
     const { data: states, ok } = await haGet<HAState[]>('/api/states', 'alerts-states');
     if (!ok || !Array.isArray(states)) {
         logger.error('[Alerts] Failed to fetch HA states');
-        return { ok: false, eventsDetected: 0, messagesSent: 0, adminsNotified: 0, notificationsStored: 0 };
+        return { ok: false, eventsDetected: 0, adminsNotified: 0, notificationsStored: 0 };
     }
 
     const [mapping, previous] = await Promise.all([getAreaMapping(), loadSnapshot()]);
@@ -212,35 +205,18 @@ export async function runAlertCheck(): Promise<AlertCheckResult> {
     await saveSnapshot(next);
 
     if (events.length === 0) {
-        return { ok: true, eventsDetected: 0, messagesSent: 0, adminsNotified: 0, notificationsStored: 0 };
+        return { ok: true, eventsDetected: 0, adminsNotified: 0, notificationsStored: 0 };
     }
 
-    // Every admin gets the bell and push notifications; Telegram only goes to linked chats.
+    // Every admin gets the bell and push notifications.
     const admins = await prisma.user.findMany({
         where: { group: 'admin' },
         select: {
             id: true,
-            telegramChatId: true,
             notificationPreferences: true,
         },
     });
 
-    // Capture photos once per camera set, shared across admins and across events (alarm, siren
-    // and motion all target the same cameras), with the sets captured in parallel.
-    const cameraSetKey = (cameras: string[]) => [...cameras].sort().join(',');
-    const cameraSets = new Map<string, string[]>();
-    // Photos only go to Telegram: no linked chat, no camera capture.
-    const anyTelegram = admins.some((admin) => admin.telegramChatId);
-    for (const event of anyTelegram ? events : []) {
-        if (event.photoCameras?.length) cameraSets.set(cameraSetKey(event.photoCameras), event.photoCameras);
-    }
-    const photoCache = new Map<string, TelegramPhoto[]>(
-        await Promise.all(
-            [...cameraSets].map(async ([key, cameras]) => [key, await captureCameraPhotos(cameras)] as const),
-        ),
-    );
-
-    let messagesSent = 0;
     let notificationsStored = 0;
     for (const admin of admins) {
         const prefs = (admin.notificationPreferences as NotificationPreferences) || {};
@@ -250,13 +226,6 @@ export async function runAlertCheck(): Promise<AlertCheckResult> {
             if (!allowed) continue;
 
             if (await notifyUser(admin.id, event)) notificationsStored++;
-            if (!admin.telegramChatId) continue;
-            const photos = event.photoCameras ? photoCache.get(cameraSetKey(event.photoCameras)) || [] : [];
-            const sent =
-                photos.length > 0
-                    ? await sendTelegramMediaGroup(admin.telegramChatId, photos, event.message)
-                    : await sendTelegramMessage(admin.telegramChatId, event.message);
-            if (sent) messagesSent++;
         }
     }
     await pruneOldNotifications();
@@ -264,7 +233,6 @@ export async function runAlertCheck(): Promise<AlertCheckResult> {
     return {
         ok: true,
         eventsDetected: events.length,
-        messagesSent,
         adminsNotified: admins.length,
         notificationsStored,
     };

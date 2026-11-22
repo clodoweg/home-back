@@ -47,16 +47,16 @@ describe('GET /api/cron', () => {
     });
 
     it('runs the alert check', async () => {
-        vi.mocked(runAlertCheck).mockResolvedValue({ ok: true, eventsDetected: 2, messagesSent: 1, adminsNotified: 1, notificationsStored: 2 });
+        vi.mocked(runAlertCheck).mockResolvedValue({ ok: true, eventsDetected: 2, adminsNotified: 1, notificationsStored: 2 });
 
         const res = await cron('?task=check-alerts');
 
         expect(res.status).toBe(200);
-        expect(await res.json()).toMatchObject({ task: 'check-alerts', eventsDetected: 2, messagesSent: 1 });
+        expect(await res.json()).toMatchObject({ task: 'check-alerts', eventsDetected: 2, notificationsStored: 2 });
     });
 
     it('runs the maintenance task due after the alert check', async () => {
-        vi.mocked(runAlertCheck).mockResolvedValue({ ok: true, eventsDetected: 0, messagesSent: 0, adminsNotified: 0, notificationsStored: 0 });
+        vi.mocked(runAlertCheck).mockResolvedValue({ ok: true, eventsDetected: 0, adminsNotified: 0, notificationsStored: 0 });
         vi.mocked(runDueMaintenance).mockResolvedValueOnce({ task: 'sync-enedis', ok: true });
 
         const res = await cron('?task=check-alerts');

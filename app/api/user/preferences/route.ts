@@ -9,7 +9,6 @@ import { logger } from "@/lib/logger";
 export const GET = withAuth(async (_request, { user }) => {
   return ApiResponse.success({
     preferences: user.widgetPreferences || {},
-    telegramChatId: user.telegramChatId || null,
     notificationPreferences: user.notificationPreferences || {},
   });
 });
@@ -30,7 +29,6 @@ export const POST = withAuth(async (request, { user }) => {
     tempThresholds,
     humThresholds,
     theme,
-    telegramChatId,
     notificationPreferences,
     notificationSpaTempThreshold,
     notificationHumidityThreshold,
@@ -54,7 +52,6 @@ export const POST = withAuth(async (request, { user }) => {
 
       const update: Prisma.UserUpdateInput = {};
       if (theme) update.theme = theme;
-      if (telegramChatId !== undefined) update.telegramChatId = telegramChatId;
       if (notificationPreferences !== undefined) {
         const existing =
           (current.notificationPreferences as Record<string, boolean>) || {};
