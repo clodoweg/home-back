@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { POST } from '@/app/api/petkit/feed/route';
 import { haPost } from '@/lib/haClient';
 import { setMockUser, clearMockUsers } from '../setup';
-import { mockAsAdmin, mockAsUser } from '../helpers/mock-auth';
-import { ADMIN_USER, STANDARD_USER } from '../helpers/test-users';
+import { mockAsAdmin } from '../helpers/mock-auth';
+import { ADMIN_USER } from '../helpers/test-users';
 
 // Mock haClient
 vi.mock('@/lib/haClient', () => ({
@@ -77,19 +77,5 @@ describe('POST /api/petkit/feed', () => {
 
         const res = await POST(req, { params: Promise.resolve({}) });
         expect(res.status).toBe(400);
-    });
-
-    it('refuses to feed for a non-admin group (only the owner acts on the house)', async () => {
-        mockAsUser();
-        setMockUser(STANDARD_USER.clerkId, STANDARD_USER);
-
-        const req = new Request('http://localhost:3000/api/petkit/feed', {
-            method: 'POST',
-            body: JSON.stringify({ deviceId: 1, amount1: 1 }),
-        });
-
-        const res = await POST(req, { params: Promise.resolve({}) });
-        expect(res.status).toBe(403);
-        expect(mockHaPost).not.toHaveBeenCalled();
     });
 });

@@ -90,11 +90,13 @@ Cycle d'une requête :
 - Les droits sont portés par `UserGroup.permissions` : drapeaux (`remote`, `history`, `cameras`,
   `admin`), joker `*` ou `entity_id` autorisés. Le groupe admin passe les contrôles d'entités ; sans
   permission `remote`, l'accès est limité au réseau de la maison.
-- **Seul le propriétaire agit sur la maison** (décision de novembre 2026) : toute action
-  (`POST /api/ha/call`, `/api/arlo/snapshot`, `/api/petkit/feed`) exige le groupe admin
-  (`canActOnHome`), quelles que soient les permissions d'un autre groupe. Le back parle à Home
-  Assistant avec un seul jeton : HA ne sait pas qui agit, ce contrôle est le seul verrou. Une
-  nouvelle route d'action passe par `canActOnHome`.
+- Actions Home Assistant (`POST /api/ha/call`, `canRunHAAction`) : le groupe admin (le
+  propriétaire) lance tout ; les autres groupes (la famille) **seulement les actions que le
+  tableau de bord propose** (`DASHBOARD_ACTIONS` de `lib/permissions.ts` : lumières, prises,
+  climat, listes de choix, boutons, scènes, alarme avec le droit `alarm_control`, jamais pour
+  `children`). Scripts, automatisations, serrures, portes, `input_*`… restent à l'admin. Le back
+  parle à HA avec un seul jeton : HA ne sait pas qui agit, cette liste est le seul verrou. Un
+  service que le front se met à appeler s'y ajoute, sinon la famille reçoit un 403.
 - `POST /api/ha/template` (Jinja libre, exécuté avec le token admin HA) est **réservé au groupe
   admin** (`canRenderHATemplate`). Le front lit les pièces / étages / modèles via
   `GET /api/ha/metadata` (template figé côté serveur, en `tojson`) et la météo via

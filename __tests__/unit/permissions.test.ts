@@ -10,7 +10,7 @@ import {
     canProxyCamera,
     canSeeCameraEntities,
     canRenderHATemplate,
-    canActOnHome,
+    canRunHAAction,
 } from '@/lib/permissions';
 
 describe('canAccessHistory', () => {
@@ -183,16 +183,56 @@ describe('canRenderHATemplate (R1)', () => {
     });
 });
 
-describe('canActOnHome (only the owner acts on the house)', () => {
-    it('allows the admin group only', () => {
-        expect(canActOnHome({ group: 'admin' })).toBe(true);
-        expect(canActOnHome({ group: 'user' })).toBe(false);
-        expect(canActOnHome({ group: 'children' })).toBe(false);
+describe('canRunHAAction (non-admins: the dashboard actions only)', () => {
+    const user = groupUser('user');
+    const child = groupUser('children');
+
+    it('lets the admin group run any action', () => {
+        expect(canRunHAAction(groupUser('admin'), 'script', 'turn_on', 'script.coucher')).toBe(true);
+        expect(canRunHAAction(groupUser('admin'), 'lock', 'unlock', 'lock.porte')).toBe(true);
     });
 
-    it('ignores the permissions of another group and refuses a missing user or group', () => {
-        expect(canActOnHome({ group: 'user', userGroup: { permissions: ['*', 'admin', 'remote', 'cameras', 'alarm_control'] } })).toBe(false);
-        expect(canActOnHome({})).toBe(false);
-        expect(canActOnHome(null)).toBe(false);
+    it.each([
+        ['light', 'turn_on', 'light.salon'],
+        ['light', 'turn_off', ['light.a', 'light.b']],
+        ['switch', 'turn_off', 'switch.pc'],
+        ['climate', 'set_temperature', 'climate.spa'],
+        ['climate', 'set_hvac_mode', 'climate.salon'],
+        ['select', 'select_option', 'select.spa_bulles'],
+        ['button', 'press', 'button.lave_linge_depart'],
+        ['scene', 'turn_on', 'scene.soiree'],
+    ])('lets a family member run the dashboard action %s.%s', (domain, service, entityId) => {
+        expect(canRunHAAction(user, domain, service, entityId)).toBe(true);
+        expect(canRunHAAction(child, domain, service, entityId)).toBe(true);
+    });
+
+    it.each([
+        ['script', 'turn_on', 'script.coucher'],
+        ['automation', 'trigger', 'automation.desarmement'],
+        ['lock', 'unlock', 'lock.porte'],
+        ['cover', 'open_cover', 'cover.garage'],
+        ['input_boolean', 'turn_on', 'input_boolean.mode_absent'],
+        ['homeassistant', 'turn_on', 'light.salon'],
+        ['light', 'toggle', 'light.salon'],
+        ['scene', 'create', 'scene.nouvelle'],
+        ['constructor', 'turn_on', 'constructor.x'],
+    ])('refuses %s.%s to non-admins: the dashboard never offers it', (domain, service, entityId) => {
+        expect(canRunHAAction(user, domain, service, entityId)).toBe(false);
+        expect(canRunHAAction(groupUser('user', ['*', 'remote', 'alarm_control']), domain, service, entityId)).toBe(false);
+    });
+
+    it('keeps the alarm rules: alarm_control right for the user group, never for children', () => {
+        expect(canRunHAAction(user, 'alarm_control_panel', 'alarm_disarm', 'alarm_control_panel.maison')).toBe(false);
+        expect(canRunHAAction(groupUser('user', ['alarm_control']), 'alarm_control_panel', 'alarm_arm_night', 'alarm_control_panel.maison')).toBe(true);
+        expect(canRunHAAction(groupUser('children', ['alarm_control']), 'alarm_control_panel', 'alarm_disarm', 'alarm_control_panel.maison')).toBe(false);
+    });
+
+    it('keeps the domain match: a dashboard service cannot reach another domain', () => {
+        expect(canRunHAAction(user, 'switch', 'turn_off', 'alarm_control_panel.maison')).toBe(false);
+        expect(canRunHAAction(user, 'light', 'turn_on', ['light.salon', 'lock.porte'])).toBe(false);
+    });
+
+    it('refuses a missing user', () => {
+        expect(canRunHAAction(null, 'light', 'turn_on', 'light.salon')).toBe(false);
     });
 });

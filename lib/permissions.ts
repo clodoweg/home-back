@@ -40,17 +40,6 @@ export const canAccessCameras = (user: MaybeSubject): boolean => hasPermission(u
 export const canRenderHATemplate = (user: MaybeSubject): boolean => user?.group === 'admin';
 
 /**
- * Whether the user may act on the house: Home Assistant service calls, camera captures, feeder.
- * WARNING: the back calls Home Assistant with a single admin token, so HA cannot tell who acts:
- * this check is the only gate. The owner decided that only he acts on the house (November 2026):
- * admin group only, whatever permissions another group carries.
- *
- * @param user - Authenticated user.
- * @returns true for the admin group only.
- */
-export const canActOnHome = (user: MaybeSubject): boolean => user?.group === 'admin';
-
-/**
  * Whether the user gets the alerts in the front's bell and as Web Push notifications. Alerts
  * describe the whole house (alarm, cameras, consumption): admin group only, like Telegram.
  *
@@ -184,8 +173,8 @@ const entityDomainOf = (entityId: string): string => entityId.split('.')[0];
  * WARNING: for non-admins the declared `domain` must match the real domain of every target
  * entity. Permissions below (alarm, sensitive domains) key on `domain`, so without this guard a
  * benign/generic domain (`switch.turn_off`, `homeassistant.turn_off`) could reach a sensitive
- * entity (e.g. the alarm) and skip the check — audit M-1. `scene`/`script` stay allowed (the
- * dashboard uses them): a scene or script that itself touches the alarm is a HA-config concern.
+ * entity (e.g. the alarm) and skip the check — audit M-1. Actions go through `canRunHAAction`,
+ * which first limits non-admins to the dashboard's services; this function holds the entity rules.
  *
  * @param user - The User object with group info.
  * @param domain - HA domain (e.g. 'switch', 'alarm_control_panel').
@@ -217,4 +206,39 @@ export function canCallHAService(user: MaybeSubject, domain: string, entityId: s
     }
 
     return true;
+}
+
+/**
+ * Actions the dashboard offers (domain → services): the only ones a non-admin group may run.
+ * WARNING: the back calls Home Assistant with a single admin token, so HA cannot tell who acts:
+ * this list is the gate. Anything else (scripts, automations, locks, covers, input_*,
+ * homeassistant.*…) stays with the admin group, even when the UI never offers it. A service the
+ * front starts calling must be added here, or the family gets a 403.
+ */
+const DASHBOARD_ACTIONS: Readonly<Record<string, readonly string[]>> = {
+    light: ['turn_on', 'turn_off'],
+    switch: ['turn_on', 'turn_off'],
+    climate: ['set_temperature', 'set_hvac_mode'],
+    select: ['select_option'],
+    button: ['press'],
+    scene: ['turn_on'],
+    alarm_control_panel: ['alarm_arm_away', 'alarm_arm_night', 'alarm_disarm', 'alarm_trigger'],
+};
+
+/**
+ * Whether the user may run a Home Assistant action (POST /api/ha/call). The admin group may run
+ * any; other groups only the dashboard's actions (`DASHBOARD_ACTIONS`), within the entity rules
+ * of `canCallHAService` (domain match, alarm right, sensitive domains closed to children).
+ *
+ * @param user - Authenticated user.
+ * @param domain - HA domain of the action.
+ * @param service - HA service of the action.
+ * @param entityId - Target entity_id(s).
+ * @returns true when the action may reach Home Assistant.
+ */
+export function canRunHAAction(user: MaybeSubject, domain: string, service: string, entityId: string | string[]): boolean {
+    if (!user) return false;
+    if (user.group === 'admin') return true;
+    if (!Object.hasOwn(DASHBOARD_ACTIONS, domain) || !DASHBOARD_ACTIONS[domain].includes(service)) return false;
+    return canCallHAService(user, domain, entityId);
 }
