@@ -76,6 +76,11 @@ describe('r2', () => {
 
             vi.stubEnv('R2_PUBLIC_URL', 'https://media.example.org');
             expect(r2.isR2Public()).toBe(true);
+            // The host decides, not a substring of the URL.
+            vi.stubEnv('R2_PUBLIC_URL', 'https://media.example.org/cloudflarestorage.com/');
+            expect(r2.isR2Public()).toBe(true);
+            vi.stubEnv('R2_PUBLIC_URL', 'media.example.org');
+            expect(r2.isR2Public()).toBe(false);
         });
     });
 
