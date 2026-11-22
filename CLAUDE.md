@@ -61,6 +61,12 @@ Cycle d'une requête :
   cet email est **rattaché** au nouvel id Clerk (groupe, préférences, Telegram conservés) : les ids
   changent au passage de l'instance Clerk de développement à celle de production. L'inscription
   Clerk doit rester fermée (invitation ou allowlist), cette liste n'en est que le second verrou.
+- Instances Clerk (depuis le 22 novembre 2026) : **production** (`clerk.home.psaltery.org`,
+  Invite-only, Google avec les identifiants OAuth du propriétaire) avec `CLERK_SECRET_KEY=sk_live_…`
+  et `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_…` sur Vercel ; **développement**
+  (`eager-penguin-61`, clés `sk_test_` / `pk_test_`) pour le local seulement. Le front et le back
+  doivent viser la même instance. Pour ajouter un membre de la famille : compte dans Clerk
+  (production) **et** e-mail dans `ALLOWED_EMAILS`.
 - IP cliente (`lib/client-ip.ts`) : `cf-connecting-ip` n'est cru que si l'en-tête `x-origin-secret`
   injecté par Cloudflare vaut `CF_ORIGIN_SECRET` ; sinon l'IP posée par Vercel fait foi. Tout repose
   sur ce secret : il ne doit **jamais** apparaître dans une réponse (règle Cloudflare de type
