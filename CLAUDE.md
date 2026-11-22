@@ -30,6 +30,9 @@ consomment aucune minute du quota du compte (restrictions de novembre 2026 levé
 2026). CodeQL (analyse de sécurité du TypeScript et des workflows, suite « Extended ») tourne en
 **configuration par défaut** de GitHub (Settings → Code security), sans fichier : n'ajoute pas de
 `codeql.yml`, les deux configurations ne coexistent pas ; résultats dans Security → Code scanning.
+Dependabot (`.github/dependabot.yml`) : chaque lundi une PR groupée (npm mineures et correctifs,
+actions GitHub), une PR pour Prisma (ses paquets bougent ensemble), une par version majeure, et une
+PR de sécurité dès qu'une faille est publiée ; signalement des failles : `SECURITY.md`.
 `security-audit.yml` : audit npm (dépendances de prod) et Dependency Review, si `package.json` ou
 `package-lock.json` change, et chaque semaine. Le lint inclut `eslint-plugin-sonarjs` (règles de
 SonarQube) : complexité cognitive au plus 15 par fonction, sauf les fichiers de
