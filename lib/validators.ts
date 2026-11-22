@@ -215,7 +215,7 @@ export const markNotificationsReadSchema = z.object({
 
 /** A browser's Web Push subscription, as `PushSubscription.toJSON()` gives it. */
 export const pushSubscriptionSchema = z.object({
-  endpoint: z.string().url().startsWith("https://").max(2048),
+  endpoint: z.url().startsWith("https://").max(2048),
   keys: z.object({
     p256dh: z.string().min(1).max(256),
     auth: z.string().min(1).max(256),
@@ -224,7 +224,7 @@ export const pushSubscriptionSchema = z.object({
 
 /** Body of POST /api/push/unsubscribe. */
 export const pushUnsubscribeSchema = z.object({
-  endpoint: z.string().url().max(2048),
+  endpoint: z.url().max(2048),
 });
 
 /**

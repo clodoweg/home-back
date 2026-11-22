@@ -32,7 +32,7 @@ const isOn = (state: string) => state === 'on';
  * printer's lights are not home lights.
  */
 const PRINTER_LIGHT_PATTERN =
-    /^light\.(p1s|x1c|p1p|a1)(_|$)|bambu|(_chamber_light|_lumiere_de_la_chambre|_printer_light)$/;
+    /(?:^light\.(?:p1s|x1c|p1p|a1)(?:_|$))|bambu|(?:(?:_chamber_light|_lumiere_de_la_chambre|_printer_light)$)/;
 
 /** Print status sensor of the Bambu Lab printer, by the suffixes the front also accepts. */
 const PRINTER_STATUS_PATTERN =

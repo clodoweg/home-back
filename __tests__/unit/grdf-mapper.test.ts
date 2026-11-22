@@ -126,7 +126,7 @@ describe('getGrdfData — default range (F09)', () => {
 
         const records = await getGrdfData(undefined, new Date(Date.UTC(2026, 2, 5, 12)));
 
-        const days = records.map(r => r.date.toISOString().slice(0, 10)).sort();
+        const days = records.map(r => r.date.toISOString().slice(0, 10)).sort((a, b) => a.localeCompare(b));
         expect(days[0]).toBe('2026-02-04');
         expect(days[days.length - 1]).toBe('2026-03-05');
     });

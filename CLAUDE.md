@@ -30,7 +30,10 @@ consomment aucune minute du quota du compte (restrictions de novembre 2026 levé
 2026). `codeql.yml` : analyse de sécurité CodeQL (requêtes `security-extended`, TypeScript et
 workflows) aux mêmes moments et chaque semaine, résultats dans Security → Code scanning ;
 `security-audit.yml` : audit npm (dépendances de prod) et Dependency Review, si `package.json` ou
-`package-lock.json` change, et chaque semaine.
+`package-lock.json` change, et chaque semaine. Le lint inclut `eslint-plugin-sonarjs` (règles de
+SonarQube) : complexité cognitive au plus 15 par fonction, sauf les fichiers de
+`COGNITIVE_COMPLEXITY_BASELINE` (`eslint.config.mjs`), plafonnés à leur score de novembre 2026 (à
+baisser en refactorant, jamais à relever) ; un faux positif se coupe sur sa ligne avec la raison.
 
 ## Architecture
 

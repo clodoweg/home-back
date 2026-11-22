@@ -249,7 +249,8 @@ export async function getDailyUsage(start: string, end: string, includeMetric: (
     const series: UsageSeries = {};
     for (const { date, metric, value } of rows) {
         if (!includeMetric(metric)) continue;
-        (series[metric] ??= []).push({ date: date.toISOString().slice(0, 10), value });
+        series[metric] ??= [];
+        series[metric].push({ date: date.toISOString().slice(0, 10), value });
     }
     return series;
 }

@@ -127,7 +127,7 @@ export function withAuth<P = Record<string, string | string[] | undefined>>(hand
             // attempt manual verification of the Bearer header. Tokens in the query string
             // are refused: URLs end up in Cloudflare/Vercel logs and browser history.
             if (!userId) {
-                const match = (request.headers.get('authorization') || '').match(/^Bearer\s+(.+)$/i);
+                const match = /^Bearer\s+(\S.*)$/i.exec(request.headers.get('authorization') || '');
                 const bearerToken = match ? match[1] : null;
 
                 if (bearerToken) {

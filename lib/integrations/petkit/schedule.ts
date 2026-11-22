@@ -60,6 +60,6 @@ export function parseRawSchedule(raw: string, ratio1: number = 1, _ratio2: numbe
         planAmountTotal2 += amount2;
         items.push({ time: h * 3600 + m * 60, amount1, amount2, bac: bacSelector });
     }
-    const scheduleItems = [{ repeats: 127, suspended: false, items: items.sort((a, b) => a.time - b.time) }];
+    const scheduleItems = [{ repeats: 127, suspended: false, items: items.toSorted((a, b) => a.time - b.time) }];
     return { scheduleItems, planAmountTotal1, planAmountTotal2 };
 }

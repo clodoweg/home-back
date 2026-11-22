@@ -47,7 +47,7 @@ const ENTITIES: Record<string, string> = {
 export function htmlToText(html: string): string {
     return html
         .replace(/<br\s*\/?>/gi, '\n')
-        .replace(/<[^>]*>/g, '')
+        .replace(/<[^<>]*>/g, '')
         .replace(/&(?:amp|lt|gt|quot|#39|nbsp);/g, (entity) => ENTITIES[entity])
         .split('\n')
         .map((line) => line.replace(/\s+/g, ' ').trim())
