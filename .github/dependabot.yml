@@ -1,0 +1,40 @@
+# Dependabot: weekly grouped update PRs (npm and GitHub Actions), checked by the usual CI.
+# Security fixes come as their own grouped PR as soon as an advisory is published.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: Europe/Paris
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: 'Dépendances'
+    groups:
+      security:
+        applies-to: security-updates
+        patterns: ['*']
+      # Prisma's packages are pinned to the same version and move together (client regenerated
+      # by `prisma generate`; a new major may need a migration step).
+      prisma:
+        patterns: ['prisma', '@prisma/*']
+      minor-and-patch:
+        applies-to: version-updates
+        update-types: [minor, patch]
+        patterns: ['*']
+        exclude-patterns: ['prisma', '@prisma/*']
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: Europe/Paris
+    commit-message:
+      prefix: 'CI'
+    groups:
+      actions:
+        patterns: ['*']
