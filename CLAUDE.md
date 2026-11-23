@@ -25,14 +25,18 @@ npx prisma studio                    # Explorateur de base
 Avant de considérer une tâche terminée : `npm run typecheck`, `npm run lint` (ESLint flat config,
 zéro avertissement toléré) puis `npm run test:coverage` (seuils bloquants). Les trois doivent passer ;
 la CI GitHub (`test.yml`) lance la même chaîne sur les PR vers `main` et sur `main` après la fusion,
-pas pour un changement limité aux `.md`. Le dépôt est **public** : les runners GitHub standard ne
+sauf, sur `main`, un changement limité aux `.md` (jamais sur une PR : la règle de `main` exige ce
+contrôle). Le dépôt est **public** : les runners GitHub standard ne
 consomment aucune minute du quota du compte (restrictions de novembre 2026 levées le 22 novembre
 2026). CodeQL (analyse de sécurité du TypeScript et des workflows, suite « Extended ») tourne en
 **configuration par défaut** de GitHub (Settings → Code security), sans fichier : n'ajoute pas de
 `codeql.yml`, les deux configurations ne coexistent pas ; résultats dans Security → Code scanning.
 Dependabot (`.github/dependabot.yml`) : chaque lundi une PR groupée (npm mineures et correctifs,
 actions GitHub), une PR pour Prisma (ses paquets bougent ensemble), une par version majeure, et une
-PR de sécurité dès qu'une faille est publiée ; signalement des failles : `SECURITY.md`.
+PR de sécurité dès qu'une faille est publiée ; signalement des failles : `SECURITY.md`. Règle de
+branche sur `main` (Settings → Rules, sans contournement) : PR obligatoire (0 approbation),
+force-push et suppression interdits, vérifications exigées `checks` et CodeQL ; pas de
+`paths-ignore` sur `pull_request` dans `test.yml`, sinon une PR de documentation resterait bloquée.
 `security-audit.yml` : audit npm (dépendances de prod) et Dependency Review, si `package.json` ou
 `package-lock.json` change, et chaque semaine. Le lint inclut `eslint-plugin-sonarjs` (règles de
 SonarQube) : complexité cognitive au plus 15 par fonction, sauf les fichiers de
