@@ -2,11 +2,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mockPrisma } from '../setup';
 
-vi.mock('web-push', () => ({
-    default: { setVapidDetails: vi.fn(), sendNotification: vi.fn() },
-}));
+// Same shape as web-push 4 (ES module): named exports only, no default export.
+vi.mock('web-push', () => ({ setVapidDetails: vi.fn(), sendNotification: vi.fn() }));
 
-import webpush from 'web-push';
+import * as webpush from 'web-push';
 import {
     htmlToText,
     notifyUser,
