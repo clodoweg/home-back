@@ -2,12 +2,11 @@ name: Backend checks
 
 # Every PR to main, and main itself after the merge: a squash merge on a stale base can produce a
 # tree no PR run has checked. The repository is public, so GitHub-hosted runners cost no minutes.
-# Documentation-only changes skip it.
+# Every PR runs it, documentation included: the ruleset on main requires this check, and a check
+# that never starts would block the PR. Only the push to main skips documentation-only changes.
 on:
   pull_request:
     branches: [main]
-    paths-ignore:
-      - '**/*.md'
   push:
     branches: [main]
     paths-ignore:
