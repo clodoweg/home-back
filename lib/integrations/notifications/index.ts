@@ -3,7 +3,8 @@
  * Web Push notifications on the devices that subscribed. Fed by the alert runner; never makes it
  * fail.
  */
-import webpush from 'web-push';
+// web-push 4 is an ES module without a default export: a default import is undefined at runtime.
+import * as webpush from 'web-push';
 
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
