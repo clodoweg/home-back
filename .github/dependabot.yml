@@ -12,6 +12,14 @@ updates:
     open-pull-requests-limit: 5
     commit-message:
       prefix: 'Dépendances'
+    ignore:
+      # typescript-eslint (ESLint) only supports TypeScript < 6.1: TypeScript 7 fails `npm install`
+      # (peer dependency). Lift this once typescript-eslint supports it, with the lint run.
+      - dependency-name: 'typescript'
+        update-types: ['version-update:semver-major']
+      # Node 24 runs in production (Vercel): its types must not describe a newer Node.
+      - dependency-name: '@types/node'
+        versions: ['>=25']
     groups:
       security:
         applies-to: security-updates
